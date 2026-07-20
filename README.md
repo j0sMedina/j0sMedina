@@ -8,7 +8,7 @@
 ```
 
 Hi, im **j0sMedina**.<br>
-<img align="right" src="https://media1.tenor.com/m/ocxJ2lhSSNsAAAAC/amongus-bailando.gif" width="130">
+<img align="right" src="assets/logo.webp" width="130">
 <sub>*Fullstack Developer · **"If you can imagine it, you can code it."***</sub><br><br>
 
 Fullstack developer with experience across the stack — from building **interfaces** to working with **backend logic** and **data**.<br>

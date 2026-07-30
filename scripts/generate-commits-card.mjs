@@ -89,6 +89,8 @@ async function main() {
     return "#39d353";
   }
 
+  const growDuration = 0.7; // debe coincidir con la duracion de growBar en el CSS
+
   let rows = "";
   sorted.forEach((entry, i) => {
     const y = paddingTop + i * rowHeight;
@@ -98,13 +100,14 @@ async function main() {
     const barMaxWidth = 180;
     const barWidth = Math.max(4, (count / maxCommits) * barMaxWidth);
     const delay = (i * 0.06).toFixed(3);
+    const flashDelay = (i * 0.06 + growDuration).toFixed(3);
     const color = barColor(isPrivate, i);
 
     rows += `
       <g class="row" style="animation-delay:${delay}s">
         <text class="repo${isPrivate ? " private" : ""}" x="${paddingX}" y="${y + 14}">${escapeXml(label)}</text>
         <rect class="bar-track" x="${paddingX}" y="${y + 20}" width="${barMaxWidth}" height="6" rx="3" />
-        <rect class="bar" x="${paddingX}" y="${y + 20}" width="${barWidth}" height="6" rx="3" fill="${color}" style="animation-delay:${delay}s" />
+        <rect class="bar" x="${paddingX}" y="${y + 20}" width="${barWidth}" height="6" rx="3" fill="${color}" style="animation-delay:${delay}s, ${flashDelay}s" />
         <text class="count" x="${width - paddingX}" y="${y + 14}" text-anchor="end">${count}</text>
       </g>`;
   });
@@ -115,8 +118,16 @@ async function main() {
   text.repo.private { fill:#8b949e; font-style:italic; font-weight:500; }
   text.count { fill:#7d8590; font-size:12px; font-weight:600; }
   .bar-track { fill:#21262d; }
-  .bar { transform-box:fill-box; transform-origin:left; transform:scaleX(0); animation: growBar 0.7s cubic-bezier(0.22,0.61,0.36,1) both; }
+  .bar {
+    transform-box:fill-box;
+    transform-origin:left;
+    transform:scaleX(0);
+    animation:
+      growBar ${growDuration}s cubic-bezier(0.22,0.61,0.36,1) both,
+      flash 0.6s ease-out both;
+  }
   @keyframes growBar { 0%{transform:scaleX(0);} 100%{transform:scaleX(1);} }
+  @keyframes flash { 0%{filter:brightness(1);} 35%{filter:brightness(2.1) saturate(1.3);} 100%{filter:brightness(1);} }
   .row { opacity:0; animation: fadeIn 0.5s ease-out both; }
   @keyframes fadeIn { 0%{opacity:0; transform:translateX(-6px);} 100%{opacity:1; transform:translateX(0);} }
   @media (prefers-reduced-motion: reduce) { .row, .bar { opacity:1 !important; transform:none !important; animation:none !important; } }

@@ -62,11 +62,13 @@ async function main() {
     throw new Error("Could not read commit contributions. Check the token/username.");
   }
 
+  // Ordena por cantidad de commits, de mayor a menor
   const sorted = [...repos].sort((a, b) => b.contributions.totalCount - a.contributions.totalCount);
 
+  // Diagnostico temporal: muestra en el log lo que realmente devuelve la API
   console.log("--- DEBUG: raw repository data ---");
   sorted.forEach((entry) => {
-    console.log(`${entry.repository.name} | isPrivate: ${entry.repository.isPrivate} | commits: ${entry.contributions.totalCount}`);
+    console.log(`${entry.repository.name} | isPrivate: ${entry.repository.isPrivate} | commits: ${entry.contributions.totalCount} | url: ${entry.repository.url}`);
   });
   console.log("-----------------------------------");
 

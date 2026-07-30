@@ -93,9 +93,8 @@ async function main() {
 
   let rects = "";
   let prevMonth = null;
-  let monthLabels = "";
-  let lastLabelX = -Infinity;
-  const minLabelGap = 28; // px minimos entre etiquetas para evitar que se peguen (ej. "Jul" y "Aug")
+  const labelEntries = []; // {x, month} - se arma primero, se filtra al final
+  const minLabelGap = 28; // px minimos entre etiquetas para evitar que se peguen
 
   weeks.forEach((week, weekIndex) => {
     const x = paddingLeft + weekIndex * step;
@@ -104,12 +103,13 @@ async function main() {
     if (firstDay) {
       const month = new Date(firstDay.date).getMonth();
       if (month !== prevMonth) {
-        // Solo dibuja la etiqueta si hay suficiente espacio desde la anterior;
-        // si no, se omite (igual que hace GitHub con columnas parciales al inicio)
-        if (x - lastLabelX >= minLabelGap) {
-          monthLabels += `<text class="lbl" x="${x}" y="16">${MONTH_NAMES[month]}</text>\n`;
-          lastLabelX = x;
+        // Si esta nueva etiqueta chocaría con la anterior, la anterior era
+        // solo una columna parcial (ej. "Jul" con 1 semana) -> se descarta esa
+        // y se deja la nueva (mes completo), igual que hace GitHub.
+        if (labelEntries.length && x - labelEntries[labelEntries.length - 1].x < minLabelGap) {
+          labelEntries.pop();
         }
+        labelEntries.push({ x, month });
         prevMonth = month;
       }
     }
@@ -122,6 +122,10 @@ async function main() {
       rects += `<rect class="${cls}" x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="${radius}" fill="${PALETTE[level]}" style="animation-delay:${delay}s"><title>${day.date}: ${day.contributionCount} contributions</title></rect>\n`;
     });
   });
+
+  const monthLabels = labelEntries
+    .map(({ x, month }) => `<text class="lbl" x="${x}" y="16">${MONTH_NAMES[month]}</text>`)
+    .join("\n");
 
   const dayLabels = `<text class="lbl" x="2" y="${paddingTop + 1 * step + 11}">Mon</text><text class="lbl" x="2" y="${paddingTop + 3 * step + 11}">Wed</text><text class="lbl" x="2" y="${paddingTop + 5 * step + 11}">Fri</text>`;
 

@@ -94,6 +94,8 @@ async function main() {
   let rects = "";
   let prevMonth = null;
   let monthLabels = "";
+  let lastLabelX = -Infinity;
+  const minLabelGap = 28; // px minimos entre etiquetas para evitar que se peguen (ej. "Jul" y "Aug")
 
   weeks.forEach((week, weekIndex) => {
     const x = paddingLeft + weekIndex * step;
@@ -102,7 +104,12 @@ async function main() {
     if (firstDay) {
       const month = new Date(firstDay.date).getMonth();
       if (month !== prevMonth) {
-        monthLabels += `<text class="lbl" x="${x}" y="16">${MONTH_NAMES[month]}</text>\n`;
+        // Solo dibuja la etiqueta si hay suficiente espacio desde la anterior;
+        // si no, se omite (igual que hace GitHub con columnas parciales al inicio)
+        if (x - lastLabelX >= minLabelGap) {
+          monthLabels += `<text class="lbl" x="${x}" y="16">${MONTH_NAMES[month]}</text>\n`;
+          lastLabelX = x;
+        }
         prevMonth = month;
       }
     }

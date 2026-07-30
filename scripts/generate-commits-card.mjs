@@ -80,6 +80,15 @@ async function main() {
   const height = paddingTop + sorted.length * rowHeight + paddingBottom;
   const maxCommits = Math.max(...sorted.map((r) => r.contributions.totalCount), 1);
 
+  // Colores tipo "medalla" para el top 3 (oro, plata, bronce); resto en verde
+  const RANK_COLORS = ["#e3b341", "#b0b7bd", "#cd7f32"];
+
+  function barColor(isPrivate, rank) {
+    if (isPrivate) return "#484f58";
+    if (rank < RANK_COLORS.length) return RANK_COLORS[rank];
+    return "#39d353";
+  }
+
   let rows = "";
   sorted.forEach((entry, i) => {
     const y = paddingTop + i * rowHeight;
@@ -89,11 +98,13 @@ async function main() {
     const barMaxWidth = 180;
     const barWidth = Math.max(4, (count / maxCommits) * barMaxWidth);
     const delay = (i * 0.06).toFixed(3);
+    const color = barColor(isPrivate, i);
 
     rows += `
       <g class="row" style="animation-delay:${delay}s">
         <text class="repo${isPrivate ? " private" : ""}" x="${paddingX}" y="${y + 14}">${escapeXml(label)}</text>
-        <rect class="bar" x="${paddingX}" y="${y + 20}" width="${barWidth}" height="6" rx="3" fill="${isPrivate ? "#484f58" : "#39d353"}" />
+        <rect class="bar-track" x="${paddingX}" y="${y + 20}" width="${barMaxWidth}" height="6" rx="3" />
+        <rect class="bar" x="${paddingX}" y="${y + 20}" width="${barWidth}" height="6" rx="3" fill="${color}" style="animation-delay:${delay}s" />
         <text class="count" x="${width - paddingX}" y="${y + 14}" text-anchor="end">${count}</text>
       </g>`;
   });
@@ -103,9 +114,12 @@ async function main() {
   text.repo { fill:#c9d1d9; font-size:13px; font-weight:600; }
   text.repo.private { fill:#8b949e; font-style:italic; font-weight:500; }
   text.count { fill:#7d8590; font-size:12px; font-weight:600; }
+  .bar-track { fill:#21262d; }
+  .bar { transform-box:fill-box; transform-origin:left; transform:scaleX(0); animation: growBar 0.7s cubic-bezier(0.22,0.61,0.36,1) both; }
+  @keyframes growBar { 0%{transform:scaleX(0);} 100%{transform:scaleX(1);} }
   .row { opacity:0; animation: fadeIn 0.5s ease-out both; }
   @keyframes fadeIn { 0%{opacity:0; transform:translateX(-6px);} 100%{opacity:1; transform:translateX(0);} }
-  @media (prefers-reduced-motion: reduce) { .row { opacity:1 !important; animation:none !important; } }
+  @media (prefers-reduced-motion: reduce) { .row, .bar { opacity:1 !important; transform:none !important; animation:none !important; } }
 </style>
 <rect width="${width}" height="${height}" fill="none"/>
 ${rows}

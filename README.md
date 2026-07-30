@@ -14,3 +14,5 @@ Hi, im **j0sMedina**.<br>
 Fullstack developer with experience across the stack and eager to learn more — building **interfaces** to work with **backend logic** and **data**.<br>
 - Focused on building clean, secure and functional **web** and **Android** applications.<br>
 - Stack: **React** · **Node.js** · **JavaScript** · **Python** · **PostgreSQL** · **CSS**<br>
+
+![wave graph](https://raw.githubusercontent.com/j0sMedina/j0sMedina/output/wave-graph.svg)

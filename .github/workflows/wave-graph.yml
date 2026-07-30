@@ -19,21 +19,49 @@ jobs:
         with:
           node-version: 20
 
+      - name: Verify script contents before running
+        run: |
+          echo "Lineas en el script:"
+          wc -l scripts/generate-wave-graph.mjs
+          echo "Primeras 5 lineas:"
+          head -5 scripts/generate-wave-graph.mjs
+
       - name: Generate wave graph SVG
         run: node scripts/generate-wave-graph.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USER: j0sMedina
 
+      - name: Generate commits card SVG
+        run: node scripts/generate-commits-card.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_USER: j0sMedina
+
+      - name: Verify generated output
+        run: |
+          echo "Contenido de la carpeta actual:"
+          ls -la
+          if [ ! -d dist ]; then
+            echo "ERROR: la carpeta 'dist' no se creo"
+            exit 1
+          fi
+          echo "Contenido de dist:"
+          ls -la dist
+
       - name: Push output to "output" branch
         run: |
+          if [ ! -d dist ]; then
+            echo "Error: dist directory is missing, nothing to push"
+            exit 1
+          fi
           cd dist
           git init -q
           git checkout -b output
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "update wave graph"
+          git commit -m "update wave graph" || echo "No changes to commit"
           git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" output:output
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

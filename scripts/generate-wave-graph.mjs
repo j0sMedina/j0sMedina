@@ -131,6 +131,14 @@ async function main() {
 
   const totalLabel = `<text class="total" x="${paddingLeft}" y="${height - 6}">${totalContributions.toLocaleString("en-US")} contributions in the last year</text>`;
 
+  // El brillo final arranca justo cuando termina de aparecer la ultima celda
+  const popDuration = 0.55;
+  const lastCellDelay = (weeks.length - 1) * weekDelay + 6 * rowDelay;
+  const shineDelay = (lastCellDelay + popDuration).toFixed(3);
+  const gridWidth = weeks.length * step;
+  const gridHeight = 7 * step;
+  const shineBarWidth = Math.max(60, gridWidth * 0.35);
+
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
 <style>
   text.lbl { fill:#7d8590; font-size:13px; font-weight:600; }
@@ -139,11 +147,38 @@ async function main() {
   .g { animation:pop 0.55s ease-out both, flash 0.7s ease-out both; }
   @keyframes pop { 0%{opacity:0;transform:scale(.2)} 60%{opacity:1;transform:scale(1.1)} 100%{opacity:1;transform:scale(1)} }
   @keyframes flash { 0%{filter:brightness(2.4)} 45%{filter:brightness(2.4)} 100%{filter:brightness(1)} }
-  @media (prefers-reduced-motion: reduce) { .c { opacity:1 !important; animation:none !important; } }
+  .shine {
+    transform: translateX(${(-shineBarWidth).toFixed(1)}px);
+    opacity: 0;
+    animation: sweep 1.1s ease-in-out forwards;
+    animation-delay: ${shineDelay}s;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+  @keyframes sweep {
+    0%   { transform: translateX(${(-shineBarWidth).toFixed(1)}px); opacity: 0; }
+    12%  { opacity: 1; }
+    88%  { opacity: 1; }
+    100% { transform: translateX(${(gridWidth + shineBarWidth).toFixed(1)}px); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .c { opacity:1 !important; animation:none !important; } .shine { display:none; } }
 </style>
+<defs>
+  <linearGradient id="shineGrad" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#ffffff" stop-opacity="0" />
+    <stop offset="50%" stop-color="#ffffff" stop-opacity="0.85" />
+    <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+  </linearGradient>
+  <clipPath id="gridClip">
+    <rect x="${paddingLeft}" y="${paddingTop}" width="${gridWidth}" height="${gridHeight}" />
+  </clipPath>
+</defs>
 <rect width="${width}" height="${height}" fill="none"/>
 ${monthLabels}${dayLabels}
 ${rects}
+<g clip-path="url(#gridClip)">
+  <rect class="shine" x="${paddingLeft}" y="${paddingTop}" width="${shineBarWidth.toFixed(1)}" height="${gridHeight}" fill="url(#shineGrad)" />
+</g>
 ${totalLabel}
 </svg>`;
 

@@ -73,7 +73,7 @@ async function main() {
   console.log("-----------------------------------");
 
   const rowHeight = 30;
-  const paddingTop = 50;
+  const paddingTop = 16;
   const paddingBottom = 16;
   const paddingX = 20;
   const width = 420;
@@ -100,7 +100,6 @@ async function main() {
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
 <style>
-  text.title { fill:#e6edf3; font-size:16px; font-weight:700; }
   text.repo { fill:#c9d1d9; font-size:13px; font-weight:600; }
   text.repo.private { fill:#8b949e; font-style:italic; font-weight:500; }
   text.count { fill:#7d8590; font-size:12px; font-weight:600; }
@@ -109,7 +108,6 @@ async function main() {
   @media (prefers-reduced-motion: reduce) { .row { opacity:1 !important; animation:none !important; } }
 </style>
 <rect width="${width}" height="${height}" fill="none"/>
-<text class="title" x="${paddingX}" y="28">Recent Commit Activity</text>
 ${rows}
 </svg>`;
 

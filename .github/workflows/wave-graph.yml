@@ -1,4 +1,4 @@
-name: Generate Snake Animation
+name: Generate Wave Graph
 
 on:
   schedule:
@@ -13,13 +13,17 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Generate snake SVG
-        uses: Platane/snk@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          github_user_name: j0sMedina
-          outputs: |
-            dist/github-contribution-grid-snake.svg
-            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
+          node-version: 20
+
+      - name: Generate wave graph SVG
+        run: node scripts/generate-wave-graph.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USER: j0sMedina
 
       - name: Push output to "output" branch
         uses: crazy-max/ghaction-github-pages@v3

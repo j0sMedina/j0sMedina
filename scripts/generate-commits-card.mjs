@@ -89,7 +89,7 @@ async function main() {
     return "#39d353";
   }
 
-  const growDuration = 0.7; // debe coincidir con la duracion de growBar en el CSS
+  const growDuration = 1.4; // debe coincidir con la duracion de growBar en el CSS
 
   let rows = "";
   sorted.forEach((entry, i) => {

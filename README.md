@@ -1,18 +1,37 @@
-```
-       _ ____       __  ___         ___            
-      (_) __ \_____/  |/  /__  ____/ (_)___  ____ _
-     / / / / / ___/ /|_/ / _ \/ __  / / __ \/ __ `/
-    / / /_/ (__  ) /  / /  __/ /_/ / / / / / /_/ / 
- __/ /\____/____/_/  /_/\___/\__,_/_/_/ /_/\__,_/  
-/___/
-```
+<div align="center">
+<img src="assets/logo.webp" width="110" />
 
-Hi, im **j0sMedina**.<br>
-<img align="right" src="assets/logo.webp" width="130">
-<sub>*Fullstack Developer · **"If you can imagine it, you can code it."***</sub><br><br>
+# j0sMedina
 
-Fullstack developer with experience across the stack and eager to learn more — building **interfaces** to work with **backend logic** and **data**.<br>
-- Focused on building clean, secure and functional **web** and **Android** applications.<br>
-- Stack: **React** · **Node.js** · **JavaScript** · **Python** · **PostgreSQL** · **CSS**<br>
+Fullstack Developer
+
+</div>
+
+<br>
+
+Fullstack developer with experience across the stack, building interfaces to work with backend logic and data. Focused on clean, secure and functional web and Android applications.
+
+<br>
+
+### Stack
+
+<p>
+  <img src="https://img.shields.io/badge/-React-20232A?style=flat-square&logo=react&logoColor=61DAFB" />
+  <img src="https://img.shields.io/badge/-Node.js-339933?style=flat-square&logo=node.js&logoColor=white" />
+  <img src="https://img.shields.io/badge/-JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" />
+  <img src="https://img.shields.io/badge/-Python-3776AB?style=flat-square&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/-PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/-CSS3-1572B6?style=flat-square&logo=css3&logoColor=white" />
+  <img src="https://img.shields.io/badge/-Docker-2496ED?style=flat-square&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/-Git-F05032?style=flat-square&logo=git&logoColor=white" />
+</p>
+
+<br>
+
+### Contribution Activity
 
 ![wave graph](https://raw.githubusercontent.com/j0sMedina/j0sMedina/output/wave-graph.svg)
+
+### Recent Commit Activity
+
+![commits card](https://raw.githubusercontent.com/j0sMedina/j0sMedina/output/commits-card.svg)

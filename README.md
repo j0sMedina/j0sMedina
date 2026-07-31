@@ -51,7 +51,7 @@ Building things people can actually use — right now that's [RentaTodo](https:/
 **[mh-datapedia](https://github.com/j0sMedina/mh-datapedia)** — A Monster Hunter wiki/database web app, my first real monorepo project for learning full-stack development end to end.<br>
 **Role:** Fullstack developer, built end to end. Also audited and hardened the API's security with help from Claude Code.<br>
 **Stack:** TypeScript · React · React Native (Expo) · Node.js · Express · PostgreSQL · Prisma · TanStack Query · Tailwind CSS · Turborepo<br>
-[Read the full security audit — SECURITY.md](https://github.com/j0sMedina/j0sMedina/blob/main/SECURITY.md)
+**[→ Read the full security audit — SECURITY.md](https://github.com/j0sMedina/j0sMedina/blob/main/SECURITY.md)**
 
 <!-- Cuando tengas más proyectos, agregalos acá con el mismo formato:
 **[Nombre del proyecto](link)** — descripción corta.

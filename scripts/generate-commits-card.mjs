@@ -1,7 +1,7 @@
 // scripts/generate-commits-card.mjs
 //
 // Genera una tarjeta SVG con los commits recientes agrupados por repositorio,
-// mas un panel a la derecha con el repo con mas Pull Requests de este mes.
+// mas paneles laterales con estadisticas extra del mes (PRs, lineas cambiadas).
 // Los repos privados se muestran como "Private repository" (sin revelar el nombre).
 //
 // IMPORTANTE: para ver actividad de repos privados, GITHUB_TOKEN necesita ser un
@@ -20,10 +20,12 @@ if (!token || !username) {
 
 // Dos alias sobre contributionsCollection en el mismo query:
 //  - allTime: para los commits por repo (igual que antes)
-//  - thisMonth: acotado con from/to al mes actual, para los Pull Requests
+//  - thisMonth: acotado con from/to al mes actual, para PRs y para saber
+//    en que repos hubo commits este mes (base para el panel de lineas)
 const query = `
   query ($login: String!, $from: DateTime!, $to: DateTime!) {
     user(login: $login) {
+      id
       allTime: contributionsCollection {
         commitContributionsByRepository(maxRepositories: 15) {
           repository {
@@ -46,6 +48,34 @@ const query = `
             totalCount
           }
         }
+        commitContributionsByRepository(maxRepositories: 15) {
+          repository {
+            name
+            isPrivate
+            url
+          }
+        }
+      }
+    }
+  }
+`;
+
+// Query auxiliar: additions/deletions de los commits del usuario en un repo
+// especifico, dentro del mes, sobre la rama por defecto.
+const historyQuery = `
+  query ($owner: String!, $name: String!, $since: GitTimestamp!, $until: GitTimestamp!, $authorId: ID!) {
+    repository(owner: $owner, name: $name) {
+      defaultBranchRef {
+        target {
+          ... on Commit {
+            history(since: $since, until: $until, author: { id: $authorId }) {
+              nodes {
+                additions
+                deletions
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -57,16 +87,20 @@ function monthRange() {
   return { from: from.toISOString(), to: now.toISOString() };
 }
 
-async function main() {
-  const { from, to } = monthRange();
+function parseOwnerAndName(url) {
+  // https://github.com/owner/repo -> { owner, name }
+  const parts = new URL(url).pathname.split("/").filter(Boolean);
+  return { owner: parts[0], name: parts[1] };
+}
 
+async function gql(query, variables) {
   const res = await fetch("https://api.github.com/graphql", {
     method: "POST",
     headers: {
       Authorization: `bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ query, variables: { login: username, from, to } }),
+    body: JSON.stringify({ query, variables }),
   });
 
   if (!res.ok) {
@@ -74,13 +108,47 @@ async function main() {
   }
 
   const json = await res.json();
-
   if (json.errors) {
     throw new Error(`GraphQL errors: ${JSON.stringify(json.errors)}`);
   }
+  return json.data;
+}
 
-  const repos = json?.data?.user?.allTime?.commitContributionsByRepository;
-  const prRepos = json?.data?.user?.thisMonth?.pullRequestContributionsByRepository ?? [];
+// Suma additions/deletions del usuario en cada repo donde tuvo commits este
+// mes. Se ejecuta en paralelo, uno por repo; si alguno falla (repo vacio,
+// sin defaultBranchRef, etc.) simplemente se ignora en vez de tumbar el script.
+async function fetchLinesChangedByRepo(repos, authorId, from, to) {
+  const results = await Promise.all(
+    repos.map(async (entry) => {
+      try {
+        const { owner, name } = parseOwnerAndName(entry.repository.url);
+        const data = await gql(historyQuery, { owner, name, since: from, until: to, authorId });
+        const nodes = data?.repository?.defaultBranchRef?.target?.history?.nodes ?? [];
+        const additions = nodes.reduce((sum, c) => sum + c.additions, 0);
+        const deletions = nodes.reduce((sum, c) => sum + c.deletions, 0);
+        return {
+          name: entry.repository.name,
+          isPrivate: entry.repository.isPrivate,
+          additions,
+          deletions,
+        };
+      } catch {
+        return null;
+      }
+    })
+  );
+  return results.filter(Boolean).filter((r) => r.additions + r.deletions > 0);
+}
+
+async function main() {
+  const { from, to } = monthRange();
+
+  const data = await gql(query, { login: username, from, to });
+
+  const repos = data?.user?.allTime?.commitContributionsByRepository;
+  const prRepos = data?.user?.thisMonth?.pullRequestContributionsByRepository ?? [];
+  const thisMonthCommitRepos = data?.user?.thisMonth?.commitContributionsByRepository ?? [];
+  const authorId = data?.user?.id;
 
   if (!repos) {
     throw new Error("Could not read commit contributions. Check the token/username.");
@@ -92,13 +160,25 @@ async function main() {
   // Repo con mas PRs este mes (si hay alguno)
   const topPR = [...prRepos].sort((a, b) => b.contributions.totalCount - a.contributions.totalCount)[0] || null;
 
+  // Lineas cambiadas este mes, por repo -> total agregado + repo con mas lineas
+  const linesByRepo = authorId
+    ? await fetchLinesChangedByRepo(thisMonthCommitRepos, authorId, from, to)
+    : [];
+  const totalAdditions = linesByRepo.reduce((sum, r) => sum + r.additions, 0);
+  const totalDeletions = linesByRepo.reduce((sum, r) => sum + r.deletions, 0);
+  const topLinesRepo =
+    [...linesByRepo].sort((a, b) => b.additions + b.deletions - (a.additions + a.deletions))[0] || null;
+
   // Diagnostico temporal: muestra en el log lo que realmente devuelve la API
   console.log("--- DEBUG: raw repository data ---");
   sorted.forEach((entry) => {
     console.log(`${entry.repository.name} | isPrivate: ${entry.repository.isPrivate} | commits: ${entry.contributions.totalCount} | url: ${entry.repository.url}`);
   });
   if (topPR) {
-    console.log(`--- DEBUG: top PR repo this month --- ${topPR.repository.name} | isPrivate: ${topPR.repository.isPrivate} | PRs: ${topPR.contributions.totalCount}`);
+    console.log(`--- DEBUG: top PR repo this month --- ${topPR.repository.name} | PRs: ${topPR.contributions.totalCount}`);
+  }
+  if (topLinesRepo) {
+    console.log(`--- DEBUG: lines changed this month --- total +${totalAdditions}/-${totalDeletions} | top: ${topLinesRepo.name} +${topLinesRepo.additions}/-${topLinesRepo.deletions}`);
   }
   console.log("-----------------------------------");
 
@@ -115,16 +195,8 @@ async function main() {
   const countX = barEndX + countGap;
   const barsColumnWidth = countX + countColumnWidth;
 
-  // --- Layout del panel de PRs (columna derecha) ---
-  // Va al lado de las barras, no debajo. Solo se agrega si hay datos.
-  const panelWidth = topPR ? 150 : 0;
-  const panelGap = topPR ? 30 : 0; // separacion entre las barras y el panel (incluye el divisor)
-  const dividerX = barsColumnWidth + panelGap / 2;
-  const panelX = barsColumnWidth + panelGap;
-
   const rowsHeight = sorted.length * rowHeight;
   const height = paddingTop + rowsHeight + paddingBottom;
-  const width = barsColumnWidth + panelGap + panelWidth + (topPR ? paddingX : 0);
 
   const maxCommits = Math.max(...sorted.map((r) => r.contributions.totalCount), 1);
 
@@ -150,8 +222,8 @@ async function main() {
   const staggerBudget = Math.max(WAVE_COMPLETION_TIME - growDuration, 0);
   const delayStep = sorted.length > 1 ? staggerBudget / (sorted.length - 1) : 0;
 
-  // El panel de PRs aparece justo despues de que termina de llenarse la
-  // ultima barra (delay de la ultima fila + su duracion de llenado).
+  // Los paneles laterales aparecen justo despues de que termina de llenarse
+  // la ultima barra (delay de la ultima fila + su duracion de llenado).
   const lastRowFlashDelay = (sorted.length - 1) * delayStep + growDuration;
   const panelDelay = (lastRowFlashDelay + 0.25).toFixed(3);
 
@@ -177,28 +249,60 @@ async function main() {
       </g>`;
   });
 
-  let panel = "";
+  // --- Paneles laterales genericos ---
+  // Cada panel define su ancho y su propio SVG interno (ya posicionado en
+  // 0,0); el layout los va acomodando en fila, uno tras otro, con un
+  // divisor entre cada uno. Agregar un tercer panel en el futuro es solo
+  // empujar un objeto mas a este arreglo.
+  const panels = [];
+
   if (topPR) {
     const isPrivate = topPR.repository.isPrivate;
     const prLabel = isPrivate ? "Private repository" : topPR.repository.name;
     const prCount = topPR.contributions.totalCount;
 
-    // Bloque de contenido centrado verticalmente dentro de la altura de la tarjeta
-    const panelCenterX = panelX + panelWidth / 2;
-    const contentHeight = 78; // label + repo-name + numero grande, aproximado
-    const contentTop = (height - contentHeight) / 2;
-    const labelY = contentTop + 11;
-    const repoY = contentTop + 30;
-    const numberY = contentTop + 70;
+    panels.push({
+      width: 140,
+      render: (x, contentTop) => `
+        <text class="panel-label" x="${x}" y="${contentTop + 11}">MOST PULL REQUESTS THIS MONTH</text>
+        <text class="panel-repo${isPrivate ? " private" : ""}" x="${x}" y="${contentTop + 30}">${escapeXml(prLabel)}</text>
+        <text class="panel-number" x="${x + 70}" y="${contentTop + 70}" text-anchor="middle">${prCount}</text>`,
+    });
+  }
 
-    panel = `
+  if (topLinesRepo) {
+    const isPrivate = topLinesRepo.isPrivate;
+    const repoLabel = isPrivate ? "Private repository" : topLinesRepo.name;
+
+    panels.push({
+      width: 160,
+      render: (x, contentTop) => `
+        <text class="panel-label" x="${x}" y="${contentTop + 11}">LINES CHANGED THIS MONTH</text>
+        <text class="panel-lines-add" x="${x}" y="${contentTop + 45}">+${totalAdditions.toLocaleString("en-US")}</text>
+        <text class="panel-lines-del" x="${x + 78}" y="${contentTop + 45}">-${totalDeletions.toLocaleString("en-US")}</text>
+        <text class="panel-sub"${isPrivate ? ' style="font-style:italic"' : ""} x="${x}" y="${contentTop + 66}">${escapeXml(repoLabel)}: +${topLinesRepo.additions.toLocaleString("en-US")}/-${topLinesRepo.deletions.toLocaleString("en-US")}</text>`,
+    });
+  }
+
+  let panelsSvg = "";
+  let cursorX = barsColumnWidth;
+
+  panels.forEach((panel) => {
+    const gap = 28;
+    const dividerX = cursorX + gap / 2;
+    const panelX = cursorX + gap;
+    const contentTop = (height - 78) / 2; // centra el bloque de contenido verticalmente
+
+    panelsSvg += `
       <line class="divider" x1="${dividerX}" y1="${paddingTop}" x2="${dividerX}" y2="${height - paddingBottom}" />
       <g class="panel" style="animation-delay:${panelDelay}s">
-        <text class="panel-label" x="${panelX}" y="${labelY}">MOST PULL REQUESTS THIS MONTH</text>
-        <text class="panel-repo${isPrivate ? " private" : ""}" x="${panelX}" y="${repoY}">${escapeXml(prLabel)}</text>
-        <text class="panel-number" x="${panelCenterX}" y="${numberY}" text-anchor="middle">${prCount}</text>
+        ${panel.render(panelX, contentTop)}
       </g>`;
-  }
+
+    cursorX = panelX + panel.width;
+  });
+
+  const width = cursorX + (panels.length ? paddingX : 0);
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
 <style>
@@ -220,7 +324,7 @@ async function main() {
   .row { opacity:0; animation: fadeIn 0.5s ease-out both; }
   @keyframes fadeIn { 0%{opacity:0; transform:translateX(-6px);} 100%{opacity:1; transform:translateX(0);} }
 
-  /* Panel lateral: PRs del mes -- tonos apagados, no compite con las barras */
+  /* Paneles laterales -- tonos apagados, no compiten con las barras */
   .divider { stroke:#21262d; stroke-width:1; }
   .panel { opacity:0; animation: fadeInPanel 0.6s ease-out both; }
   @keyframes fadeInPanel { 0%{opacity:0; transform:translateX(4px);} 100%{opacity:1; transform:translateX(0);} }
@@ -228,12 +332,15 @@ async function main() {
   text.panel-repo { fill:#a8b1bb; font-size:13px; font-weight:600; }
   text.panel-repo.private { fill:#8b949e; font-style:italic; font-weight:500; }
   text.panel-number { fill:#c9d1d9; font-size:30px; font-weight:700; }
+  text.panel-lines-add { fill:#3fb950; font-size:22px; font-weight:700; }
+  text.panel-lines-del { fill:#f85149; font-size:22px; font-weight:700; }
+  text.panel-sub { fill:#7d8590; font-size:10.5px; font-weight:500; }
 
   @media (prefers-reduced-motion: reduce) { .row, .bar, .count, .panel { opacity:1 !important; transform:none !important; animation:none !important; } }
 </style>
 <rect width="${width}" height="${height}" fill="none"/>
 ${rows}
-${panel}
+${panelsSvg}
 </svg>`;
 
   const fs = await import("node:fs");

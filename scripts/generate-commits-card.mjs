@@ -76,7 +76,20 @@ async function main() {
   const paddingTop = 16;
   const paddingBottom = 16;
   const paddingX = 20;
-  const width = 420;
+
+  // --- Layout de la barra ---
+  // barMaxWidth es el tope duro que una barra puede alcanzar (aunque el repo
+  // con mas commits la llene al 100%). El numero de commits se ancla siempre
+  // a este mismo punto (barEndX), en vez de flotar hacia el borde derecho de
+  // la tarjeta -- asi todos los numeros quedan alineados en una sola columna
+  // justo despues de donde terminan las barras.
+  const barMaxWidth = 180;
+  const countGap = 10; // espacio entre el final de la barra y el numero
+  const countColumnWidth = 34; // espacio reservado para el texto del numero
+  const barEndX = paddingX + barMaxWidth;
+  const countX = barEndX + countGap;
+  const width = countX + countColumnWidth;
+
   const height = paddingTop + sorted.length * rowHeight + paddingBottom;
   const maxCommits = Math.max(...sorted.map((r) => r.contributions.totalCount), 1);
 
@@ -98,17 +111,17 @@ async function main() {
   }
 
   // --- Timing ---
-  // Las barras ahora llenan mas lento (antes 1.4s) y el tiempo total de la
-  // animacion (ultima fila terminando de llenarse) se hace coincidir con el
-  // tiempo que tarda en completarse el "wave" del grafico de contribuciones
-  // (generate-wave-graph.mjs), para que si se muestran juntos terminen a la vez.
+  // Las barras llenan lento y el tiempo total de la animacion (ultima fila
+  // terminando de llenarse) se hace coincidir con el tiempo que tarda en
+  // completarse el "wave" del grafico de contribuciones (generate-wave-graph.mjs),
+  // para que si se muestran juntos terminen a la vez.
   //
   // wave: lastCellDelay = (weeks-1)*weekDelay + 6*rowDelay ; termina en + popDuration
   // usando ~53 semanas (tamano tipico del calendario de GitHub):
   //   (53-1)*0.065 + 6*0.036 + 0.55 ≈ 4.15s
   const WAVE_COMPLETION_TIME = 4.15;
 
-  const growDuration = 1.8; // duracion del llenado de cada barra (antes 1.4s)
+  const growDuration = 1.8; // duracion del llenado de cada barra
   const staggerBudget = Math.max(WAVE_COMPLETION_TIME - growDuration, 0);
   const delayStep = sorted.length > 1 ? staggerBudget / (sorted.length - 1) : 0;
 
@@ -118,7 +131,6 @@ async function main() {
     const isPrivate = entry.repository.isPrivate;
     const label = isPrivate ? "Private repository" : entry.repository.name;
     const count = entry.contributions.totalCount;
-    const barMaxWidth = 180;
     const barWidth = Math.max(4, (count / maxCommits) * barMaxWidth);
     const delay = (i * delayStep).toFixed(3);
     const flashDelay = (i * delayStep + growDuration).toFixed(3);
@@ -131,7 +143,7 @@ async function main() {
         <text class="repo${isPrivate ? " private" : ""}"${nameStyle} x="${paddingX}" y="${y + 14}">${escapeXml(label)}</text>
         <rect class="bar-track" x="${paddingX}" y="${y + 20}" width="${barMaxWidth}" height="6" rx="3" />
         <rect class="bar" x="${paddingX}" y="${y + 20}" width="${barWidth}" height="6" rx="3" fill="${color}" style="animation-delay:${delay}s, ${flashDelay}s" />
-        <text class="count" x="${width - paddingX}" y="${y + 14}" text-anchor="end" style="animation-delay:${flashDelay}s">${count}</text>
+        <text class="count" x="${countX}" y="${y + 14}" style="animation-delay:${flashDelay}s">${count}</text>
       </g>`;
   });
 

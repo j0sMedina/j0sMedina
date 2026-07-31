@@ -18,10 +18,6 @@ if (!token || !username) {
   process.exit(1);
 }
 
-// Dos alias sobre contributionsCollection en el mismo query:
-//  - allTime: para los commits por repo (igual que antes)
-//  - thisMonth: acotado con from/to al mes actual, para PRs y para saber
-//    en que repos hubo commits este mes (base para el panel de lineas)
 const query = `
   query ($login: String!, $from: DateTime!, $to: DateTime!) {
     user(login: $login) {
@@ -60,8 +56,6 @@ const query = `
   }
 `;
 
-// Query auxiliar: additions/deletions de los commits del usuario en un repo
-// especifico, dentro del mes, sobre la rama por defecto.
 const historyQuery = `
   query ($owner: String!, $name: String!, $since: GitTimestamp!, $until: GitTimestamp!, $authorId: ID!) {
     repository(owner: $owner, name: $name) {
@@ -88,9 +82,15 @@ function monthRange() {
 }
 
 function parseOwnerAndName(url) {
-  // https://github.com/owner/repo -> { owner, name }
   const parts = new URL(url).pathname.split("/").filter(Boolean);
   return { owner: parts[0], name: parts[1] };
+}
+
+// Estimacion de ancho de texto sin medir DOM (SVG generado en Node, sin canvas).
+// 0.6 * fontSize es un promedio razonable para texto bold sans-serif; sirve
+// para dimensionar paneles y espaciar numeros sin que se encimen.
+function estimateWidth(text, fontSize, factor = 0.6) {
+  return text.length * fontSize * factor;
 }
 
 async function gql(query, variables) {
@@ -114,9 +114,6 @@ async function gql(query, variables) {
   return json.data;
 }
 
-// Suma additions/deletions del usuario en cada repo donde tuvo commits este
-// mes. Se ejecuta en paralelo, uno por repo; si alguno falla (repo vacio,
-// sin defaultBranchRef, etc.) simplemente se ignora en vez de tumbar el script.
 async function fetchLinesChangedByRepo(repos, authorId, from, to) {
   const results = await Promise.all(
     repos.map(async (entry) => {
@@ -154,13 +151,10 @@ async function main() {
     throw new Error("Could not read commit contributions. Check the token/username.");
   }
 
-  // Ordena por cantidad de commits, de mayor (arriba) a menor (abajo) -- automatico
   const sorted = [...repos].sort((a, b) => b.contributions.totalCount - a.contributions.totalCount);
 
-  // Repo con mas PRs este mes (si hay alguno)
   const topPR = [...prRepos].sort((a, b) => b.contributions.totalCount - a.contributions.totalCount)[0] || null;
 
-  // Lineas cambiadas este mes, por repo -> total agregado + repo con mas lineas
   const linesByRepo = authorId
     ? await fetchLinesChangedByRepo(thisMonthCommitRepos, authorId, from, to)
     : [];
@@ -169,7 +163,6 @@ async function main() {
   const topLinesRepo =
     [...linesByRepo].sort((a, b) => b.additions + b.deletions - (a.additions + a.deletions))[0] || null;
 
-  // Diagnostico temporal: muestra en el log lo que realmente devuelve la API
   console.log("--- DEBUG: raw repository data ---");
   sorted.forEach((entry) => {
     console.log(`${entry.repository.name} | isPrivate: ${entry.repository.isPrivate} | commits: ${entry.contributions.totalCount} | url: ${entry.repository.url}`);
@@ -214,16 +207,10 @@ async function main() {
     return null;
   }
 
-  // --- Timing ---
-  // wave: (53-1)*0.065 + 6*0.036 + 0.55 ≈ 4.15s -- ver generate-wave-graph.mjs
   const WAVE_COMPLETION_TIME = 4.15;
-
   const growDuration = 1.8;
   const staggerBudget = Math.max(WAVE_COMPLETION_TIME - growDuration, 0);
   const delayStep = sorted.length > 1 ? staggerBudget / (sorted.length - 1) : 0;
-
-  // Los paneles laterales aparecen justo despues de que termina de llenarse
-  // la ultima barra (delay de la ultima fila + su duracion de llenado).
   const lastRowFlashDelay = (sorted.length - 1) * delayStep + growDuration;
   const panelDelay = (lastRowFlashDelay + 0.25).toFixed(3);
 
@@ -249,38 +236,65 @@ async function main() {
       </g>`;
   });
 
-  // --- Paneles laterales genericos ---
-  // Cada panel define su ancho y su propio SVG interno (ya posicionado en
-  // 0,0); el layout los va acomodando en fila, uno tras otro, con un
-  // divisor entre cada uno. Agregar un tercer panel en el futuro es solo
-  // empujar un objeto mas a este arreglo.
+  // --- Paneles laterales ---
+  // Cada panel calcula su PROPIO ancho a partir de estimateWidth() sobre su
+  // contenido real (labels, nombre de repo, numeros) -- ya no hay anchos
+  // fijos adivinados que se quedan cortos. Las etiquetas largas se parten en
+  // dos lineas para no forzar el panel a ser mas ancho de lo necesario.
+  const contentHeight = 84;
+  const contentTop = (height - contentHeight) / 2;
   const panels = [];
 
   if (topPR) {
     const isPrivate = topPR.repository.isPrivate;
     const prLabel = isPrivate ? "Private repository" : topPR.repository.name;
     const prCount = topPR.contributions.totalCount;
+    const labelLines = ["MOST PULL REQUESTS", "THIS MONTH"];
+    const numberText = String(prCount);
+
+    const panelWidth =
+      Math.max(
+        ...labelLines.map((l) => estimateWidth(l, 9.5)),
+        estimateWidth(prLabel, 13),
+        estimateWidth(numberText, 30)
+      ) + 6;
 
     panels.push({
-      width: 140,
-      render: (x, contentTop) => `
-        <text class="panel-label" x="${x}" y="${contentTop + 11}">MOST PULL REQUESTS THIS MONTH</text>
-        <text class="panel-repo${isPrivate ? " private" : ""}" x="${x}" y="${contentTop + 30}">${escapeXml(prLabel)}</text>
-        <text class="panel-number" x="${x + 70}" y="${contentTop + 70}" text-anchor="middle">${prCount}</text>`,
+      width: panelWidth,
+      render: (x) => `
+        <text class="panel-label" x="${x}" y="${contentTop + 9}">${labelLines[0]}</text>
+        <text class="panel-label" x="${x}" y="${contentTop + 21}">${labelLines[1]}</text>
+        <text class="panel-repo${isPrivate ? " private" : ""}" x="${x}" y="${contentTop + 40}">${escapeXml(prLabel)}</text>
+        <text class="panel-number" x="${x + panelWidth / 2}" y="${contentTop + 80}" text-anchor="middle">${numberText}</text>`,
     });
   }
 
   if (topLinesRepo) {
     const isPrivate = topLinesRepo.isPrivate;
     const repoLabel = isPrivate ? "Private repository" : topLinesRepo.name;
+    const labelLines = ["LINES CHANGED", "THIS MONTH"];
+    const addText = `+${totalAdditions.toLocaleString("en-US")}`;
+    const delText = `-${totalDeletions.toLocaleString("en-US")}`;
+    const numberGap = 14;
+    const addWidth = estimateWidth(addText, 22, 0.62);
+    const numbersWidth = addWidth + numberGap + estimateWidth(delText, 22, 0.62);
+    const subText = `${repoLabel}: +${topLinesRepo.additions.toLocaleString("en-US")}/-${topLinesRepo.deletions.toLocaleString("en-US")}`;
+
+    const panelWidth =
+      Math.max(
+        ...labelLines.map((l) => estimateWidth(l, 9.5)),
+        numbersWidth,
+        estimateWidth(subText, 10.5)
+      ) + 6;
 
     panels.push({
-      width: 160,
-      render: (x, contentTop) => `
-        <text class="panel-label" x="${x}" y="${contentTop + 11}">LINES CHANGED THIS MONTH</text>
-        <text class="panel-lines-add" x="${x}" y="${contentTop + 45}">+${totalAdditions.toLocaleString("en-US")}</text>
-        <text class="panel-lines-del" x="${x + 78}" y="${contentTop + 45}">-${totalDeletions.toLocaleString("en-US")}</text>
-        <text class="panel-sub"${isPrivate ? ' style="font-style:italic"' : ""} x="${x}" y="${contentTop + 66}">${escapeXml(repoLabel)}: +${topLinesRepo.additions.toLocaleString("en-US")}/-${topLinesRepo.deletions.toLocaleString("en-US")}</text>`,
+      width: panelWidth,
+      render: (x) => `
+        <text class="panel-label" x="${x}" y="${contentTop + 9}">${labelLines[0]}</text>
+        <text class="panel-label" x="${x}" y="${contentTop + 21}">${labelLines[1]}</text>
+        <text class="panel-lines-add" x="${x}" y="${contentTop + 52}">${addText}</text>
+        <text class="panel-lines-del" x="${x + addWidth + numberGap}" y="${contentTop + 52}">${delText}</text>
+        <text class="panel-sub"${isPrivate ? ' style="font-style:italic"' : ""} x="${x}" y="${contentTop + 72}">${escapeXml(subText)}</text>`,
     });
   }
 
@@ -288,15 +302,14 @@ async function main() {
   let cursorX = barsColumnWidth;
 
   panels.forEach((panel) => {
-    const gap = 28;
+    const gap = 34; // espacio entre columnas -- suficiente ahora que el ancho es real, no adivinado
     const dividerX = cursorX + gap / 2;
     const panelX = cursorX + gap;
-    const contentTop = (height - 78) / 2; // centra el bloque de contenido verticalmente
 
     panelsSvg += `
       <line class="divider" x1="${dividerX}" y1="${paddingTop}" x2="${dividerX}" y2="${height - paddingBottom}" />
       <g class="panel" style="animation-delay:${panelDelay}s">
-        ${panel.render(panelX, contentTop)}
+        ${panel.render(panelX)}
       </g>`;
 
     cursorX = panelX + panel.width;
@@ -324,11 +337,10 @@ async function main() {
   .row { opacity:0; animation: fadeIn 0.5s ease-out both; }
   @keyframes fadeIn { 0%{opacity:0; transform:translateX(-6px);} 100%{opacity:1; transform:translateX(0);} }
 
-  /* Paneles laterales -- tonos apagados, no compiten con las barras */
   .divider { stroke:#21262d; stroke-width:1; }
   .panel { opacity:0; animation: fadeInPanel 0.6s ease-out both; }
   @keyframes fadeInPanel { 0%{opacity:0; transform:translateX(4px);} 100%{opacity:1; transform:translateX(0);} }
-  text.panel-label { fill:#6e7681; font-size:9.5px; font-weight:700; letter-spacing:0.05em; }
+  text.panel-label { fill:#6e7681; font-size:9.5px; font-weight:700; letter-spacing:0.04em; }
   text.panel-repo { fill:#a8b1bb; font-size:13px; font-weight:600; }
   text.panel-repo.private { fill:#8b949e; font-style:italic; font-weight:500; }
   text.panel-number { fill:#c9d1d9; font-size:30px; font-weight:700; }

@@ -7,7 +7,7 @@ Fullstack Developer
 
 </div>
 
-Fullstack developer with experience across the stack, building interfaces and working with backend logic and data. Focused on clean, secure and functional web and mobile applications.
+Gamer & Software Engineer. Building things people can actually use — right now that's RentaTodo, a peer-to-peer rental platform where I own the owner-facing dashboard. Systems Engineering student, still learning as I build.
 
 ### Stack
 

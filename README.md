@@ -5,7 +5,7 @@
 
 **Gamer & Software Engineer**
 
-Building things people can actually use — right now that's [RentaTodo](https://github.com/j0sMedina), a peer-to-peer rental platform where I own the owner-facing dashboard. Systems Engineering student, still learning as I build.
+Building things people can actually use - right now that's [RentaTodo](https://github.com/j0sMedina), a peer-to-peer rental platform where I own the owner-facing dashboard. Systems Engineering student, still learning as I build.
 
 </div>
 

@@ -1,7 +1,7 @@
 // scripts/generate-commits-card.mjs
 //
 // Genera una tarjeta SVG con los commits recientes agrupados por repositorio,
-// mas un bloque extra abajo con el repo con mas Pull Requests de este mes.
+// mas un panel a la derecha con el repo con mas Pull Requests de este mes.
 // Los repos privados se muestran como "Private repository" (sin revelar el nombre).
 //
 // IMPORTANTE: para ver actividad de repos privados, GITHUB_TOKEN necesita ser un
@@ -107,22 +107,25 @@ async function main() {
   const paddingBottom = 16;
   const paddingX = 20;
 
-  // --- Layout de la barra ---
+  // --- Layout de la barra (columna izquierda) ---
   const barMaxWidth = 180;
   const countGap = 10;
   const countColumnWidth = 34;
   const barEndX = paddingX + barMaxWidth;
   const countX = barEndX + countGap;
-  const width = countX + countColumnWidth;
+  const barsColumnWidth = countX + countColumnWidth;
 
-  // --- Layout del bloque extra (PRs del mes) ---
-  // Solo se agrega si hay datos; queda debajo de las filas de commits, en
-  // tono mas apagado para no competir visualmente con las barras.
-  const extraSectionGap = 18; // separacion entre la ultima fila y el bloque extra
-  const extraSectionHeight = topPR ? 58 : 0;
+  // --- Layout del panel de PRs (columna derecha) ---
+  // Va al lado de las barras, no debajo. Solo se agrega si hay datos.
+  const panelWidth = topPR ? 150 : 0;
+  const panelGap = topPR ? 30 : 0; // separacion entre las barras y el panel (incluye el divisor)
+  const dividerX = barsColumnWidth + panelGap / 2;
+  const panelX = barsColumnWidth + panelGap;
 
   const rowsHeight = sorted.length * rowHeight;
-  const height = paddingTop + rowsHeight + (topPR ? extraSectionGap + extraSectionHeight : 0) + paddingBottom;
+  const height = paddingTop + rowsHeight + paddingBottom;
+  const width = barsColumnWidth + panelGap + panelWidth + (topPR ? paddingX : 0);
+
   const maxCommits = Math.max(...sorted.map((r) => r.contributions.totalCount), 1);
 
   const RANK_COLORS = ["#e3b341", "#b0b7bd", "#cd7f32"];
@@ -147,10 +150,10 @@ async function main() {
   const staggerBudget = Math.max(WAVE_COMPLETION_TIME - growDuration, 0);
   const delayStep = sorted.length > 1 ? staggerBudget / (sorted.length - 1) : 0;
 
-  // El bloque extra aparece justo despues de que termina de llenarse la
+  // El panel de PRs aparece justo despues de que termina de llenarse la
   // ultima barra (delay de la ultima fila + su duracion de llenado).
   const lastRowFlashDelay = (sorted.length - 1) * delayStep + growDuration;
-  const extraDelay = (lastRowFlashDelay + 0.25).toFixed(3);
+  const panelDelay = (lastRowFlashDelay + 0.25).toFixed(3);
 
   let rows = "";
   sorted.forEach((entry, i) => {
@@ -174,18 +177,26 @@ async function main() {
       </g>`;
   });
 
-  let extraSection = "";
+  let panel = "";
   if (topPR) {
     const isPrivate = topPR.repository.isPrivate;
     const prLabel = isPrivate ? "Private repository" : topPR.repository.name;
     const prCount = topPR.contributions.totalCount;
-    const extraY = paddingTop + rowsHeight + extraSectionGap;
 
-    extraSection = `
-      <g class="extra" style="animation-delay:${extraDelay}s">
-        <text class="extra-label" x="${paddingX}" y="${extraY + 12}">MOST PULL REQUESTS THIS MONTH</text>
-        <text class="extra-repo${isPrivate ? " private" : ""}" x="${paddingX}" y="${extraY + 34}">${escapeXml(prLabel)}</text>
-        <text class="extra-count" x="${width - paddingX}" y="${extraY + 34}" text-anchor="end">${prCount}</text>
+    // Bloque de contenido centrado verticalmente dentro de la altura de la tarjeta
+    const panelCenterX = panelX + panelWidth / 2;
+    const contentHeight = 78; // label + repo-name + numero grande, aproximado
+    const contentTop = (height - contentHeight) / 2;
+    const labelY = contentTop + 11;
+    const repoY = contentTop + 30;
+    const numberY = contentTop + 70;
+
+    panel = `
+      <line class="divider" x1="${dividerX}" y1="${paddingTop}" x2="${dividerX}" y2="${height - paddingBottom}" />
+      <g class="panel" style="animation-delay:${panelDelay}s">
+        <text class="panel-label" x="${panelX}" y="${labelY}">MOST PULL REQUESTS THIS MONTH</text>
+        <text class="panel-repo${isPrivate ? " private" : ""}" x="${panelX}" y="${repoY}">${escapeXml(prLabel)}</text>
+        <text class="panel-number" x="${panelCenterX}" y="${numberY}" text-anchor="middle">${prCount}</text>
       </g>`;
   }
 
@@ -209,19 +220,20 @@ async function main() {
   .row { opacity:0; animation: fadeIn 0.5s ease-out both; }
   @keyframes fadeIn { 0%{opacity:0; transform:translateX(-6px);} 100%{opacity:1; transform:translateX(0);} }
 
-  /* Bloque extra: PRs del mes -- tonos apagados, no compite con las barras */
-  .extra { opacity:0; animation: fadeInExtra 0.6s ease-out both; }
-  @keyframes fadeInExtra { 0%{opacity:0; transform:translateY(4px);} 100%{opacity:1; transform:translateY(0);} }
-  text.extra-label { fill:#6e7681; font-size:10px; font-weight:700; letter-spacing:0.06em; }
-  text.extra-repo { fill:#a8b1bb; font-size:13px; font-weight:600; }
-  text.extra-repo.private { fill:#8b949e; font-style:italic; font-weight:500; }
-  text.extra-count { fill:#c9d1d9; font-size:26px; font-weight:700; }
+  /* Panel lateral: PRs del mes -- tonos apagados, no compite con las barras */
+  .divider { stroke:#21262d; stroke-width:1; }
+  .panel { opacity:0; animation: fadeInPanel 0.6s ease-out both; }
+  @keyframes fadeInPanel { 0%{opacity:0; transform:translateX(4px);} 100%{opacity:1; transform:translateX(0);} }
+  text.panel-label { fill:#6e7681; font-size:9.5px; font-weight:700; letter-spacing:0.05em; }
+  text.panel-repo { fill:#a8b1bb; font-size:13px; font-weight:600; }
+  text.panel-repo.private { fill:#8b949e; font-style:italic; font-weight:500; }
+  text.panel-number { fill:#c9d1d9; font-size:30px; font-weight:700; }
 
-  @media (prefers-reduced-motion: reduce) { .row, .bar, .count, .extra { opacity:1 !important; transform:none !important; animation:none !important; } }
+  @media (prefers-reduced-motion: reduce) { .row, .bar, .count, .panel { opacity:1 !important; transform:none !important; animation:none !important; } }
 </style>
 <rect width="${width}" height="${height}" fill="none"/>
 ${rows}
-${extraSection}
+${panel}
 </svg>`;
 
   const fs = await import("node:fs");

@@ -5,7 +5,7 @@
 
 **Gamer & Software Engineer**
 
-Building things people can actually use - right now that's [RentaTodo](https://github.com/j0sMedina), a peer-to-peer rental platform where I own the owner-facing dashboard. Systems Engineering student, still learning as I build.
+Building things people can actually use — right now that's [RentaTodo](https://github.com/Wa39/rentatodo), a peer-to-peer rental platform where I own the owner-facing dashboard. Systems Engineering student, still learning as I build.
 
 </div>
 
@@ -44,14 +44,14 @@ Building things people can actually use - right now that's [RentaTodo](https://g
 
 ### Featured Projects
 
-**[RentaTodo](https://github.com/j0sMedina)** - Peer-to-peer item rental platform built with a four-person team.<br>
+**[RentaTodo](https://github.com/Wa39/rentatodo)** — Peer-to-peer item rental platform built with a four-person team.<br>
 **Role:** Owner of the owner-facing dashboard (frontend).<br>
 **Stack:** React, Node.js, PostgreSQL, Docker.
 
-**[mh-datapedia](https://github.com/j0sMedina/mh-datapedia)** - A Monster Hunter wiki/database web app, my first real monorepo project for learning full-stack development end to end.<br>
+**[mh-datapedia](https://github.com/j0sMedina/mh-datapedia)** — A Monster Hunter wiki/database web app, my first real monorepo project for learning full-stack development end to end.<br>
 **Role:** Fullstack developer, built end to end. Also audited and hardened the API's security with help from Claude Code.<br>
 **Stack:** TypeScript · React · React Native (Expo) · Node.js · Express · PostgreSQL · Prisma · TanStack Query · Tailwind CSS · Turborepo<br>
-[Read the full security audit — SECURITY.md](https://github.com/j0sMedina/mh-datapedia/blob/main/SECURITY.md)
+[Read the full security audit — SECURITY.md](https://github.com/j0sMedina/j0sMedina/blob/main/SECURITY.md)
 
 <!-- Cuando tengas más proyectos, agregalos acá con el mismo formato:
 **[Nombre del proyecto](link)** — descripción corta.

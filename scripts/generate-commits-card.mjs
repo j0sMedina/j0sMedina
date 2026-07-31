@@ -138,12 +138,12 @@ async function main() {
     const nameHex = nameColor(isPrivate, i);
     const nameStyle = nameHex ? ` style="fill:${nameHex}"` : "";
 
-    rows += `
+rows += `
       <g class="row" style="animation-delay:${delay}s">
         <text class="repo${isPrivate ? " private" : ""}"${nameStyle} x="${paddingX}" y="${y + 14}">${escapeXml(label)}</text>
         <rect class="bar-track" x="${paddingX}" y="${y + 20}" width="${barMaxWidth}" height="6" rx="3" />
         <rect class="bar" x="${paddingX}" y="${y + 20}" width="${barWidth}" height="6" rx="3" fill="${color}" style="animation-delay:${delay}s, ${flashDelay}s" />
-        <text class="count" x="${countX}" y="${y + 14}" style="animation-delay:${flashDelay}s">${count}</text>
+        <text class="count" x="${countX}" y="${y + 24}" style="animation-delay:${flashDelay}s">${count}</text>
       </g>`;
   });
 

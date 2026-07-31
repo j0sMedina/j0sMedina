@@ -62,7 +62,7 @@ async function main() {
     throw new Error("Could not read commit contributions. Check the token/username.");
   }
 
-  // Ordena por cantidad de commits, de mayor a menor
+  // Ordena por cantidad de commits, de mayor (arriba) a menor (abajo) -- automatico
   const sorted = [...repos].sort((a, b) => b.contributions.totalCount - a.contributions.totalCount);
 
   // Diagnostico temporal: muestra en el log lo que realmente devuelve la API
@@ -80,16 +80,37 @@ async function main() {
   const height = paddingTop + sorted.length * rowHeight + paddingBottom;
   const maxCommits = Math.max(...sorted.map((r) => r.contributions.totalCount), 1);
 
-  // Colores tipo "medalla" para el top 3 (oro, plata, bronce); resto en verde
+  // Colores tipo "medalla" para el top 3 (oro, plata, bronce) -- SOLO para el
+  // nombre del repo, ya no para la barra. Las barras siempre van en verde
+  // GitHub (o gris para repos privados).
   const RANK_COLORS = ["#e3b341", "#b0b7bd", "#cd7f32"];
+  const GITHUB_GREEN = "#39d353";
+  const PRIVATE_GRAY = "#484f58";
 
-  function barColor(isPrivate, rank) {
-    if (isPrivate) return "#484f58";
-    if (rank < RANK_COLORS.length) return RANK_COLORS[rank];
-    return "#39d353";
+  function barColor(isPrivate) {
+    return isPrivate ? PRIVATE_GRAY : GITHUB_GREEN;
   }
 
-  const growDuration = 1.4; // debe coincidir con la duracion de growBar en el CSS
+  function nameColor(isPrivate, rank) {
+    if (isPrivate) return null; // usa el fill por defecto de .repo.private
+    if (rank < RANK_COLORS.length) return RANK_COLORS[rank];
+    return null; // usa el fill por defecto de .repo
+  }
+
+  // --- Timing ---
+  // Las barras ahora llenan mas lento (antes 1.4s) y el tiempo total de la
+  // animacion (ultima fila terminando de llenarse) se hace coincidir con el
+  // tiempo que tarda en completarse el "wave" del grafico de contribuciones
+  // (generate-wave-graph.mjs), para que si se muestran juntos terminen a la vez.
+  //
+  // wave: lastCellDelay = (weeks-1)*weekDelay + 6*rowDelay ; termina en + popDuration
+  // usando ~53 semanas (tamano tipico del calendario de GitHub):
+  //   (53-1)*0.065 + 6*0.036 + 0.55 ≈ 4.15s
+  const WAVE_COMPLETION_TIME = 4.15;
+
+  const growDuration = 1.8; // duracion del llenado de cada barra (antes 1.4s)
+  const staggerBudget = Math.max(WAVE_COMPLETION_TIME - growDuration, 0);
+  const delayStep = sorted.length > 1 ? staggerBudget / (sorted.length - 1) : 0;
 
   let rows = "";
   sorted.forEach((entry, i) => {
@@ -99,16 +120,18 @@ async function main() {
     const count = entry.contributions.totalCount;
     const barMaxWidth = 180;
     const barWidth = Math.max(4, (count / maxCommits) * barMaxWidth);
-    const delay = (i * 0.06).toFixed(3);
-    const flashDelay = (i * 0.06 + growDuration).toFixed(3);
-    const color = barColor(isPrivate, i);
+    const delay = (i * delayStep).toFixed(3);
+    const flashDelay = (i * delayStep + growDuration).toFixed(3);
+    const color = barColor(isPrivate);
+    const nameHex = nameColor(isPrivate, i);
+    const nameStyle = nameHex ? ` style="fill:${nameHex}"` : "";
 
     rows += `
       <g class="row" style="animation-delay:${delay}s">
-        <text class="repo${isPrivate ? " private" : ""}" x="${paddingX}" y="${y + 14}">${escapeXml(label)}</text>
+        <text class="repo${isPrivate ? " private" : ""}"${nameStyle} x="${paddingX}" y="${y + 14}">${escapeXml(label)}</text>
         <rect class="bar-track" x="${paddingX}" y="${y + 20}" width="${barMaxWidth}" height="6" rx="3" />
         <rect class="bar" x="${paddingX}" y="${y + 20}" width="${barWidth}" height="6" rx="3" fill="${color}" style="animation-delay:${delay}s, ${flashDelay}s" />
-        <text class="count" x="${width - paddingX}" y="${y + 14}" text-anchor="end">${count}</text>
+        <text class="count" x="${width - paddingX}" y="${y + 14}" text-anchor="end" style="animation-delay:${flashDelay}s">${count}</text>
       </g>`;
   });
 
@@ -116,7 +139,7 @@ async function main() {
 <style>
   text.repo { fill:#c9d1d9; font-size:13px; font-weight:600; }
   text.repo.private { fill:#8b949e; font-style:italic; font-weight:500; }
-  text.count { fill:#7d8590; font-size:12px; font-weight:600; }
+  text.count { fill:#7d8590; font-size:12px; font-weight:600; opacity:0; animation: fadeInCount 0.4s ease-out both; }
   .bar-track { fill:#21262d; }
   .bar {
     transform-box:fill-box;
@@ -128,9 +151,10 @@ async function main() {
   }
   @keyframes growBar { 0%{transform:scaleX(0);} 100%{transform:scaleX(1);} }
   @keyframes flash { 0%{filter:brightness(1);} 35%{filter:brightness(2.1) saturate(1.3);} 100%{filter:brightness(1);} }
+  @keyframes fadeInCount { 0%{opacity:0; transform:translateX(-4px);} 100%{opacity:1; transform:translateX(0);} }
   .row { opacity:0; animation: fadeIn 0.5s ease-out both; }
   @keyframes fadeIn { 0%{opacity:0; transform:translateX(-6px);} 100%{opacity:1; transform:translateX(0);} }
-  @media (prefers-reduced-motion: reduce) { .row, .bar { opacity:1 !important; transform:none !important; animation:none !important; } }
+  @media (prefers-reduced-motion: reduce) { .row, .bar, .count { opacity:1 !important; transform:none !important; animation:none !important; } }
 </style>
 <rect width="${width}" height="${height}" fill="none"/>
 ${rows}

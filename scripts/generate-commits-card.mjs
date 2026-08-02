@@ -252,10 +252,12 @@ async function main() {
   const contentTop = (height - contentHeight) / 2;
   const panels = [];
 
-  if (topPR) {
-    const isPrivate = topPR.repository.isPrivate;
-    const prLabel = isPrivate ? "Private repository" : topPR.repository.name;
-    const prCount = topPR.contributions.totalCount;
+  // Panels always render, even with nothing to show (0 / "No activity yet")
+  // -- a blank space where the panel used to be reads as broken, not empty.
+  {
+    const isPrivate = topPR ? topPR.repository.isPrivate : false;
+    const prLabel = topPR ? (isPrivate ? "Private repository" : topPR.repository.name) : "No PRs yet";
+    const prCount = topPR ? topPR.contributions.totalCount : 0;
     const labelLines = ["MOST PULL REQUESTS", "THIS MONTH"];
     const numberText = String(prCount);
 
@@ -276,16 +278,18 @@ async function main() {
     });
   }
 
-  if (topLinesRepo) {
-    const isPrivate = topLinesRepo.isPrivate;
-    const repoLabel = isPrivate ? "Private repository" : topLinesRepo.name;
+  {
+    const isPrivate = topLinesRepo ? topLinesRepo.isPrivate : false;
+    const repoLabel = topLinesRepo ? (isPrivate ? "Private repository" : topLinesRepo.name) : null;
     const labelLines = ["LINES CHANGED", "THIS MONTH"];
     const addText = `+${totalAdditions.toLocaleString("en-US")}`;
     const delText = `-${totalDeletions.toLocaleString("en-US")}`;
     const numberGap = 14;
     const addWidth = estimateWidth(addText, 22, 0.62);
     const numbersWidth = addWidth + numberGap + estimateWidth(delText, 22, 0.62);
-    const subText = `${repoLabel}: +${topLinesRepo.additions.toLocaleString("en-US")}/-${topLinesRepo.deletions.toLocaleString("en-US")}`;
+    const subText = repoLabel
+      ? `${repoLabel}: +${topLinesRepo.additions.toLocaleString("en-US")}/-${topLinesRepo.deletions.toLocaleString("en-US")}`
+      : "No commits yet";
 
     const panelWidth =
       Math.max(

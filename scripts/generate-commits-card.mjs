@@ -22,6 +22,12 @@ if (!token || !username) {
 
 const query = `
   query ($login: String!, $from: DateTime!, $to: DateTime!) {
+    viewer {
+      login
+      repositories(privacy: PRIVATE, first: 1) {
+        totalCount
+      }
+    }
     user(login: $login) {
       id
       allTime: contributionsCollection {
@@ -148,6 +154,17 @@ async function main() {
   const prRepos = data?.user?.thisMonth?.pullRequestContributionsByRepository ?? [];
   const thisMonthCommitRepos = data?.user?.thisMonth?.commitContributionsByRepository ?? [];
   const authorId = data?.user?.id;
+  const viewerLogin = data?.viewer?.login;
+  const visiblePrivateRepositories = data?.viewer?.repositories?.totalCount ?? 0;
+
+  if (viewerLogin?.toLowerCase() !== username.toLowerCase()) {
+    throw new Error("PAT_TOKEN does not belong to GITHUB_USER. Check the token account.");
+  }
+  if (visiblePrivateRepositories === 0) {
+    throw new Error(
+      "PAT_TOKEN cannot access any private repositories. Use a token for this account with private repository access and read:user (classic PAT: repo + read:user), then update the PAT_TOKEN Actions secret."
+    );
+  }
 
   if (!repos) {
     throw new Error("Could not read commit contributions. Check the token/username.");
@@ -168,18 +185,13 @@ async function main() {
   const topLinesRepo =
     [...linesByRepo].sort((a, b) => b.additions + b.deletions - (a.additions + a.deletions))[0] || null;
 
-  // Diagnostico temporal: muestra en el log lo que realmente devuelve la API
-  console.log("--- DEBUG: raw repository data ---");
-  sorted.forEach((entry) => {
-    console.log(`${entry.repository.name} | isPrivate: ${entry.repository.isPrivate} | commits: ${entry.contributions.totalCount} | url: ${entry.repository.url}`);
-  });
-  if (topPR) {
-    console.log(`--- DEBUG: top PR repo this month --- ${topPR.repository.name} | PRs: ${topPR.contributions.totalCount}`);
+  // Public workflow logs must never reveal names or URLs of private repositories.
+  const privateContributions = sorted.filter((entry) => entry.repository.isPrivate).length;
+  console.log(`Repository groups: ${sorted.length} total; ${privateContributions} private.`);
+  if (privateContributions === 0) {
+    console.warn("No private contribution repositories returned. If expected, ensure PAT_TOKEN has read:user and access to those repositories.");
   }
-  if (topLinesRepo) {
-    console.log(`--- DEBUG: lines changed this month --- total +${totalAdditions}/-${totalDeletions} | top: ${topLinesRepo.name} +${topLinesRepo.additions}/-${topLinesRepo.deletions}`);
-  }
-  console.log("-----------------------------------");
+  console.log(`Monthly lines changed: +${totalAdditions}/-${totalDeletions}.`);
 
   const rowHeight = 30;
   const paddingTop = 16;

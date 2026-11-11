@@ -5,7 +5,7 @@
 
 **Gamer & Software Engineer**
 
-Building things people can actually use — right now that's [Puentes Fiscales](https://puentesfiscales.vercel.app), an appointment system for my university's tax assistance center, used by real people. Systems Engineering student, still learning as I build.
+Building things people can actually use — from [Puentes Fiscales](https://puentesfiscales.vercel.app), an appointment system for my university's tax assistance center, to H&Q Bienes Raíces, a real-estate platform I'm developing for a local client. Systems Engineering student, still learning as I build.
 
 </div>
 
@@ -15,6 +15,7 @@ Building things people can actually use — right now that's [Puentes Fiscales](
 <p>
   <img src="https://img.shields.io/badge/-React-20232A?style=flat-square&logo=react&logoColor=61DAFB" />
   <img src="https://img.shields.io/badge/-Next.js-000000?style=flat-square&logo=nextdotjs&logoColor=white" />
+  <img src="https://img.shields.io/badge/-Vite-646CFF?style=flat-square&logo=vite&logoColor=white" />
   <img src="https://img.shields.io/badge/-React%20Native%20(Expo)-000020?style=flat-square&logo=expo&logoColor=white" />
   <img src="https://img.shields.io/badge/-TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" />
   <img src="https://img.shields.io/badge/-JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" />
@@ -27,6 +28,7 @@ Building things people can actually use — right now that's [Puentes Fiscales](
 <p>
   <img src="https://img.shields.io/badge/-Node.js-339933?style=flat-square&logo=node.js&logoColor=white" />
   <img src="https://img.shields.io/badge/-Express-000000?style=flat-square&logo=express&logoColor=white" />
+  <img src="https://img.shields.io/badge/-Hono-E36002?style=flat-square&logo=hono&logoColor=white" />
   <img src="https://img.shields.io/badge/-Python-3776AB?style=flat-square&logo=python&logoColor=white" />
   <img src="https://img.shields.io/badge/-C++-00599C?style=flat-square&logo=c%2B%2B&logoColor=white" />
   <img src="https://img.shields.io/badge/-Java-007396?style=flat-square&logo=java&logoColor=white" />
@@ -41,11 +43,19 @@ Building things people can actually use — right now that's [Puentes Fiscales](
   <img src="https://img.shields.io/badge/-Git-F05032?style=flat-square&logo=git&logoColor=white" />
   <img src="https://img.shields.io/badge/-Turborepo-EF4444?style=flat-square&logo=turborepo&logoColor=white" />
   <img src="https://img.shields.io/badge/-Vercel-000000?style=flat-square&logo=vercel&logoColor=white" />
+  <img src="https://img.shields.io/badge/-Cloudflare%20Workers-F38020?style=flat-square&logo=cloudflareworkers&logoColor=white" />
+  <img src="https://img.shields.io/badge/-Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white" />
+  <img src="https://img.shields.io/badge/-Playwright-2EAD33?style=flat-square&logo=playwright&logoColor=white" />
 </p>
 
 ---
 
 ### Featured Projects
+
+**H&Q Bienes Raíces** *(Private client project · In development)* — Real-estate property showcase for a local business in Sarapiquí, Costa Rica. Responsive property catalog with search, price and location filters, individual property pages, photo galleries, maps and WhatsApp contact links. A private management dashboard and persistent storage are planned.<br>
+**Role:** Solo full-stack developer — architecture, UI/UX, frontend, API contracts and automated testing.<br>
+**Stack:** React · Vite · TypeScript · Tailwind CSS · Hono · Cloudflare Workers · Zod / OpenAPI · Vitest · Playwright<br>
+**Planned:** Cloudflare D1 · R2 · Access
 
 **[Puentes Fiscales](https://puentesfiscales.vercel.app)** — Appointment booking system (in-person or virtual) for NAF Puentes Fiscales, the *Núcleo de Asistencia Fiscal* (tax assistance center) at Universidad Nacional (UNA), Sarapiquí campus. Built for real users and designed to be maintained by future students.<br>
 **Role:** Solo developer, built end to end with the NAF team and faculty supervisor (design, frontend, backend, deployment).<br>

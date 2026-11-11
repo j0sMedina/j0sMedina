@@ -33,6 +33,9 @@ Building things people can actually use — from [Puentes Fiscales](https://puen
   <img src="https://img.shields.io/badge/-C++-00599C?style=flat-square&logo=c%2B%2B&logoColor=white" />
   <img src="https://img.shields.io/badge/-Java-007396?style=flat-square&logo=java&logoColor=white" />
   <img src="https://img.shields.io/badge/-PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/-SQL-336791?style=flat-square&logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/-SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white" />
+  <img src="https://img.shields.io/badge/-Cloudflare%20D1-F38020?style=flat-square&logo=cloudflare&logoColor=white" />
   <img src="https://img.shields.io/badge/-Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white" />
   <img src="https://img.shields.io/badge/-Google%20APIs-4285F4?style=flat-square&logo=google&logoColor=white" />
 </p>
@@ -43,6 +46,7 @@ Building things people can actually use — from [Puentes Fiscales](https://puen
   <img src="https://img.shields.io/badge/-Git-F05032?style=flat-square&logo=git&logoColor=white" />
   <img src="https://img.shields.io/badge/-Turborepo-EF4444?style=flat-square&logo=turborepo&logoColor=white" />
   <img src="https://img.shields.io/badge/-Vercel-000000?style=flat-square&logo=vercel&logoColor=white" />
+  <img src="https://img.shields.io/badge/-Google%20Cloud-4285F4?style=flat-square&logo=googlecloud&logoColor=white" />
   <img src="https://img.shields.io/badge/-Cloudflare%20Workers-F38020?style=flat-square&logo=cloudflareworkers&logoColor=white" />
   <img src="https://img.shields.io/badge/-Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white" />
   <img src="https://img.shields.io/badge/-Playwright-2EAD33?style=flat-square&logo=playwright&logoColor=white" />
@@ -55,7 +59,7 @@ Building things people can actually use — from [Puentes Fiscales](https://puen
 **H&Q Bienes Raíces** *(Private client project · In development)* — Real-estate property showcase for a local business in Sarapiquí, Costa Rica. Responsive property catalog with search, price and location filters, individual property pages, photo galleries, maps and WhatsApp contact links. A private management dashboard and persistent storage are planned.<br>
 **Role:** Solo full-stack developer — architecture, UI/UX, frontend, API contracts and automated testing.<br>
 **Stack:** React · Vite · TypeScript · Tailwind CSS · Hono · Cloudflare Workers · Zod / OpenAPI · Vitest · Playwright<br>
-**Planned:** Cloudflare D1 · R2 · Access
+**Planned database & infrastructure:** Cloudflare D1 (SQLite) · R2 · Access
 
 **[Puentes Fiscales (NAF)](https://puentesfiscales.vercel.app)** *(Private repository)* — Appointment booking system (in-person or virtual) for NAF Puentes Fiscales, the *Núcleo de Asistencia Fiscal* (tax assistance center) at Universidad Nacional (UNA), Sarapiquí campus. Built for real users and designed to be maintained by future students.<br>
 **Role:** Solo developer, built end to end with the NAF team and faculty supervisor (design, frontend, backend, deployment).<br>

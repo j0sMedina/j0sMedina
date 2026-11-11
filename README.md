@@ -57,7 +57,7 @@ Building things people can actually use — from [Puentes Fiscales](https://puen
 **Stack:** React · Vite · TypeScript · Tailwind CSS · Hono · Cloudflare Workers · Zod / OpenAPI · Vitest · Playwright<br>
 **Planned:** Cloudflare D1 · R2 · Access
 
-**[Puentes Fiscales](https://puentesfiscales.vercel.app)** — Appointment booking system (in-person or virtual) for NAF Puentes Fiscales, the *Núcleo de Asistencia Fiscal* (tax assistance center) at Universidad Nacional (UNA), Sarapiquí campus. Built for real users and designed to be maintained by future students.<br>
+**[Puentes Fiscales (NAF)](https://puentesfiscales.vercel.app)** *(Private repository)* — Appointment booking system (in-person or virtual) for NAF Puentes Fiscales, the *Núcleo de Asistencia Fiscal* (tax assistance center) at Universidad Nacional (UNA), Sarapiquí campus. Built for real users and designed to be maintained by future students.<br>
 **Role:** Solo developer, built end to end with the NAF team and faculty supervisor (design, frontend, backend, deployment).<br>
 **Stack:** Next.js · React · TypeScript · PostgreSQL · Google APIs (Calendar / Meet / Gmail) · Vercel
 

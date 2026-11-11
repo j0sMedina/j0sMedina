@@ -3,8 +3,8 @@
 // Genera una tarjeta SVG con los commits recientes agrupados por repositorio,
 // mas paneles laterales con estadisticas extra del mes (PRs, lineas cambiadas).
 // Los paneles aparecen en cascada: uno despues de que el anterior termina
-// de aparecer. Los repos privados se muestran como "Private repository"
-// (sin revelar el nombre).
+// de aparecer. Los repos privados muestran su nombre cuando son visibles al token
+// en la consulta de GitHub.
 //
 // IMPORTANTE: para ver actividad de repos privados, GITHUB_TOKEN necesita ser un
 // Personal Access Token (classic) con scope "repo" -- el token automatico de
@@ -238,7 +238,7 @@ async function main() {
   sorted.forEach((entry, i) => {
     const y = paddingTop + i * rowHeight;
     const isPrivate = entry.repository.isPrivate;
-    const label = isPrivate ? "Private repository" : entry.repository.name;
+    const label = entry.repository.name;
     const count = entry.contributions.totalCount;
     const barWidth = Math.max(4, (count / maxCommits) * barMaxWidth);
     const delay = (i * delayStep).toFixed(3);
@@ -268,7 +268,7 @@ async function main() {
   // -- a blank space where the panel used to be reads as broken, not empty.
   {
     const isPrivate = topPR ? topPR.repository.isPrivate : false;
-    const prLabel = topPR ? (isPrivate ? "Private repository" : topPR.repository.name) : "No PRs yet";
+    const prLabel = topPR ? topPR.repository.name : "No PRs yet";
     const prCount = topPR ? topPR.contributions.totalCount : 0;
     const labelLines = ["MOST PULL REQUESTS", "THIS MONTH"];
     const numberText = String(prCount);
@@ -292,7 +292,7 @@ async function main() {
 
   {
     const isPrivate = topLinesRepo ? topLinesRepo.isPrivate : false;
-    const repoLabel = topLinesRepo ? (isPrivate ? "Private repository" : topLinesRepo.name) : null;
+    const repoLabel = topLinesRepo ? topLinesRepo.name : null;
     const labelLines = ["LINES CHANGED", "THIS MONTH"];
     const addText = `+${totalAdditions.toLocaleString("en-US")}`;
     const delText = `-${totalDeletions.toLocaleString("en-US")}`;

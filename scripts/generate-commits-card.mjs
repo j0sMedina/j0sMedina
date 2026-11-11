@@ -276,8 +276,11 @@ async function main() {
       allRepos.set(entry.repository.url.toLowerCase(), entry);
     }
   }
+  // Keep the card compact: display only the five repositories with the
+  // most commits, while monthly metrics still include all accessible repos.
   const sorted = [...allRepos.values()]
-    .sort((a, b) => b.contributions.totalCount - a.contributions.totalCount);
+    .sort((a, b) => b.contributions.totalCount - a.contributions.totalCount)
+    .slice(0, 5);
 
   const allPRRepos = [
     ...prRepos,

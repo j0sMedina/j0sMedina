@@ -122,6 +122,103 @@ async function gql(query, variables) {
   return json.data;
 }
 
+
+// Recover private activity from repository history. GitHub's profile-contribution
+// grouping can omit private repos even when the PAT has read access.
+const privateReposQuery = "query ($after: String) { viewer { repositories(privacy: PRIVATE, affiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER], first: 100, after: $after) { nodes { name nameWithOwner url isPrivate isFork } pageInfo { hasNextPage endCursor } } } }";
+
+const privateHistoryQuery = "query ($owner: String!, $name: String!, $authorId: ID!, $yearStart: GitTimestamp!, $monthStart: GitTimestamp!, $until: GitTimestamp!, $after: String) { repository(owner: $owner, name: $name) { defaultBranchRef { target { ... on Commit { yearly: history(author: { id: $authorId }, since: $yearStart, until: $until, first: 1) { totalCount } monthly: history(author: { id: $authorId }, since: $monthStart, until: $until, first: 100, after: $after) { nodes { additions deletions } pageInfo { hasNextPage endCursor } } } } } } }";
+
+const privatePRQuery = "query ($q: String!) { search(type: ISSUE, query: $q, first: 1) { issueCount } }";
+
+// The client brand is not public yet. Alias property-related private repos
+// without embedding their private repository names in this public source.
+function displayRepoName(repo) {
+  if (repo.isPrivate && /inmobiliaria|real.?estate/i.test(repo.name)) {
+    return "Real Estate Platform";
+  }
+  return repo.name;
+}
+
+async function listPrivateRepositories() {
+  const result = [];
+  let cursor = null;
+  for (let page = 0; page < 20; page++) {
+    const data = await gql(privateReposQuery, { after: cursor });
+    const connection = data?.viewer?.repositories;
+    if (!connection) throw new Error("Cannot enumerate private repositories with PAT_TOKEN.");
+    result.push(...(connection.nodes ?? []).filter((r) => r && !r.isFork));
+    if (!connection.pageInfo?.hasNextPage) return result;
+    cursor = connection.pageInfo.endCursor;
+    if (!cursor) throw new Error("Missing private repository page cursor.");
+  }
+  throw new Error("Private repository listing exceeds pagination safety limit.");
+}
+
+async function privateRepoActivity(repo, authorId, monthStart, until) {
+  const { owner, name } = parseOwnerAndName(repo.url);
+  const yearStart = new Date(new Date(until).getTime() - 365 * 24 * 3600 * 1000).toISOString();
+  const vars = { owner, name, authorId, yearStart, monthStart, until, after: null };
+  const response = await gql(privateHistoryQuery, vars);
+  const history = response?.repository?.defaultBranchRef?.target;
+  const count = history?.yearly?.totalCount ?? 0;
+  let additions = 0;
+  let deletions = 0;
+  let page = history?.monthly;
+  let pageNumber = 0;
+  while (page) {
+    for (const commit of page.nodes ?? []) {
+      additions += commit.additions;
+      deletions += commit.deletions;
+    }
+    if (!page.pageInfo?.hasNextPage) break;
+    if (!page.pageInfo.endCursor || ++pageNumber >= 50) {
+      throw new Error("Unable to paginate monthly private commit history.");
+    }
+    vars.after = page.pageInfo.endCursor;
+    const nextData = await gql(privateHistoryQuery, vars);
+    page = nextData?.repository?.defaultBranchRef?.target?.monthly;
+  }
+  let prCount = 0;
+  try {
+    const searchText = "repo:" + repo.nameWithOwner +
+      " is:pr author:" + username +
+      " created:" + monthStart.slice(0, 10) + ".." + until.slice(0, 10);
+    const prs = await gql(privatePRQuery, { q: searchText });
+    prCount = prs?.search?.issueCount ?? 0;
+  } catch {
+    console.warn("Could not count PRs from one private repository.");
+  }
+  return {
+    repository: { name: displayRepoName(repo), isPrivate: true, url: repo.url },
+    contributions: { totalCount: count },
+    monthly: { additions, deletions, prCount },
+  };
+}
+
+async function privateActivities(authorId, monthStart, until) {
+  const repos = await listPrivateRepositories();
+  const stats = [];
+  let errors = 0;
+  for (let i = 0; i < repos.length; i += 4) {
+    const batch = await Promise.all(repos.slice(i, i + 4).map(async (r) => {
+      try {
+        return await privateRepoActivity(r, authorId, monthStart, until);
+      } catch {
+        errors++;
+        return null;
+      }
+    }));
+    stats.push(...batch.filter(Boolean));
+  }
+  if (errors) console.warn("Could not read " + errors + " private repository histories; check PAT_TOKEN permissions.");
+  if (repos.length && !stats.length) {
+    throw new Error("PAT_TOKEN can list private repositories, but cannot read their commit histories.");
+  }
+  console.log("Private repositories scanned: " + repos.length + "; histories read: " + stats.length + ".");
+  return stats;
+}
+
 async function fetchLinesChangedByRepo(repos, authorId, from, to) {
   const results = await Promise.all(
     repos.map(async (entry) => {
@@ -170,16 +267,36 @@ async function main() {
     throw new Error("Could not read commit contributions. Check the token/username.");
   }
 
-  // Ordena por cantidad de commits, de mayor (arriba) a menor (abajo) -- automatico
-  const sorted = [...repos].sort((a, b) => b.contributions.totalCount - a.contributions.totalCount);
+  // GitHub may omit private activity from contributionsCollection. Enrich it
+  // with default-branch commits authored by this user in private repositories.
+  const privateStats = await privateActivities(authorId, from, to);
+  const allRepos = new Map(repos.map((entry) => [entry.repository.url.toLowerCase(), entry]));
+  for (const entry of privateStats) {
+    if (entry.contributions.totalCount > 0) {
+      allRepos.set(entry.repository.url.toLowerCase(), entry);
+    }
+  }
+  const sorted = [...allRepos.values()]
+    .sort((a, b) => b.contributions.totalCount - a.contributions.totalCount);
 
-  // Repo con mas PRs este mes (si hay alguno)
-  const topPR = [...prRepos].sort((a, b) => b.contributions.totalCount - a.contributions.totalCount)[0] || null;
+  const allPRRepos = [
+    ...prRepos,
+    ...privateStats.filter((e) => e.monthly.prCount > 0)
+      .map((e) => ({ repository: e.repository, contributions: { totalCount: e.monthly.prCount } })),
+  ];
+  const topPR = [...allPRRepos]
+    .sort((a, b) => b.contributions.totalCount - a.contributions.totalCount)[0] || null;
 
-  // Lineas cambiadas este mes, por repo -> total agregado + repo con mas lineas
-  const linesByRepo = authorId
+  const publicLines = authorId
     ? await fetchLinesChangedByRepo(thisMonthCommitRepos, authorId, from, to)
     : [];
+  const privateLines = privateStats
+    .filter((e) => e.monthly.additions + e.monthly.deletions > 0)
+    .map((e) => ({
+      name: e.repository.name, isPrivate: true,
+      additions: e.monthly.additions, deletions: e.monthly.deletions,
+    }));
+  const linesByRepo = [...publicLines, ...privateLines];
   const totalAdditions = linesByRepo.reduce((sum, r) => sum + r.additions, 0);
   const totalDeletions = linesByRepo.reduce((sum, r) => sum + r.deletions, 0);
   const topLinesRepo =
@@ -189,7 +306,7 @@ async function main() {
   const privateContributions = sorted.filter((entry) => entry.repository.isPrivate).length;
   console.log(`Repository groups: ${sorted.length} total; ${privateContributions} private.`);
   if (privateContributions === 0) {
-    console.warn("No private contribution repositories returned. If expected, ensure PAT_TOKEN has read:user and access to those repositories.");
+    console.warn("No private commits on default branches were found for this user. Check PAT_TOKEN repository access.");
   }
   console.log(`Monthly lines changed: +${totalAdditions}/-${totalDeletions}.`);
 

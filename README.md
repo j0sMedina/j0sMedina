@@ -43,23 +43,7 @@ A property showcase and management platform for a **real-estate business in Cost
 
 ---
 
-#### 03 — [MH Datapedia](https://github.com/j0sMedina/mh-datapedia) · Full-Stack Monorepo
-
-![Public source](https://img.shields.io/badge/Source-Public-2EA44F?style=flat-square) ![Web and mobile](https://img.shields.io/badge/Platforms-Web%20%2B%20Mobile-8250DF?style=flat-square)
-
-A Monster Hunter encyclopedia and database project built to explore full-stack engineering across a shared web, mobile and API ecosystem.
-
-**What I built:** Full-stack monorepo with React web and Expo mobile clients, a Node.js/Express API and PostgreSQL persistence using Prisma. Also performed an API security review and hardening work.
-
-**Engineering highlights:** Shared packages and tooling, typed application boundaries, API design, and full-stack development workflows.
-
-**Stack:** React · React Native (Expo) · TypeScript · Node.js · Express · PostgreSQL · Prisma · TanStack Query · Turborepo
-
-**[Explore the source code](https://github.com/j0sMedina/mh-datapedia)** · **[Read the security audit](https://github.com/j0sMedina/j0sMedina/blob/main/SECURITY.md)**
-
----
-
-#### 04 — [RentaTodo](https://github.com/Wa39/rentatodo) · Peer-to-Peer Rental Marketplace
+#### 03 — [RentaTodo](https://github.com/Wa39/rentatodo) · Peer-to-Peer Rental Marketplace
 
 ![Team project](https://img.shields.io/badge/Project-Team-0969DA?style=flat-square) ![Dashboard](https://img.shields.io/badge/Focus-Owner%20Dashboard-8250DF?style=flat-square)
 
@@ -72,6 +56,22 @@ A peer-to-peer rental platform where owners can list items and renters can disco
 **Stack:** React · TypeScript · Node.js · PostgreSQL · Docker
 
 **[Explore the repository](https://github.com/Wa39/rentatodo)**
+
+---
+
+#### 04 — [MH Datapedia](https://github.com/j0sMedina/mh-datapedia) · Full-Stack Monorepo
+
+![Public source](https://img.shields.io/badge/Source-Public-2EA44F?style=flat-square) ![Web and mobile](https://img.shields.io/badge/Platforms-Web%20%2B%20Mobile-8250DF?style=flat-square)
+
+A Monster Hunter encyclopedia and database project built to explore full-stack engineering across a shared web, mobile and API ecosystem.
+
+**What I built:** Full-stack monorepo with React web and Expo mobile clients, a Node.js/Express API and PostgreSQL persistence using Prisma. Also performed an API security review and hardening work.
+
+**Engineering highlights:** Shared packages and tooling, typed application boundaries, API design, and full-stack development workflows.
+
+**Stack:** React · React Native (Expo) · TypeScript · Node.js · Express · PostgreSQL · Prisma · TanStack Query · Turborepo
+
+**[Explore the source code](https://github.com/j0sMedina/mh-datapedia)** · **[Read the security audit](https://github.com/j0sMedina/j0sMedina/blob/main/SECURITY.md)**
 
 ---
 

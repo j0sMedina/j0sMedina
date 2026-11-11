@@ -5,7 +5,7 @@
 
 **Gamer & Software Engineer**
 
-Building things people can actually use — from [Puentes Fiscales](https://puentesfiscales.vercel.app), an appointment system for my university's tax assistance center, to H&Q Bienes Raíces, a real-estate platform I'm developing for a local client. Systems Engineering student, still learning as I build.
+Building things people can actually use — from [Puentes Fiscales](https://puentesfiscales.vercel.app), an appointment system for my university's tax assistance center, to a real-estate platform I'm developing for a local client. Systems Engineering student, still learning as I build.
 
 </div>
 
@@ -92,7 +92,7 @@ Building things people can actually use — from [Puentes Fiscales](https://puen
 
 ### Featured Projects
 
-**H&Q Bienes Raíces** *(Private client project · In development)* — Real-estate property showcase for a local business in Sarapiquí, Costa Rica. Responsive property catalog with search, price and location filters, individual property pages, photo galleries, maps and WhatsApp contact links. A private management dashboard and persistent storage are planned.<br>
+**Real Estate Platform** *(Private client project · In development)* — Real-estate property showcase for a local business in Costa Rica. Responsive property catalog with search, price and location filters, individual property pages, photo galleries, maps and WhatsApp contact links. A private management dashboard and persistent storage are planned.<br>
 **Role:** Solo full-stack developer — architecture, UI/UX, frontend, API contracts and automated testing.<br>
 **Stack:** React · Vite · TypeScript · Tailwind CSS · Hono · Cloudflare Workers · Zod / OpenAPI · Vitest · Playwright<br>
 **Database & infrastructure:** Cloudflare D1 (SQLite) · Drizzle ORM · Cloudflare R2 · Cloudflare Access *(implementation in progress)*

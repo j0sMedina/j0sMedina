@@ -9,6 +9,72 @@ Building things people can actually use — from [Puentes Fiscales](https://puen
 
 </div>
 
+### Featured Projects
+
+#### 01 — [Puentes Fiscales (NAF)](https://puentesfiscales.vercel.app) · Appointment & Service Platform
+
+![Live website](https://img.shields.io/badge/Live-Website-2EA44F?style=flat-square) ![Private source](https://img.shields.io/badge/Source-Private-6E7681?style=flat-square) ![Real-world project](https://img.shields.io/badge/Use-Real--world-0969DA?style=flat-square)
+
+A web platform for the **tax assistance center at Universidad Nacional (UNA)**, bringing service requests and appointment scheduling into a single experience. Supports in-person and virtual appointments, with Google Meet integration and a staff-facing management area.
+
+**What I built:** End-to-end product architecture, frontend, backend, database integration, Google Workspace workflows, testing and deployment.
+
+**Engineering highlights:** Time-zone-aware availability; booking conflict prevention using PostgreSQL constraints; Google Calendar/Meet integration; data validation and privacy-conscious workflows; maintainability for future university students.
+
+**Stack:** Next.js · React · TypeScript · PostgreSQL · Prisma · Google Cloud APIs · Vercel
+
+**[Visit the live website](https://puentesfiscales.vercel.app)**
+
+---
+
+#### 02 — Real Estate Platform · Property Discovery & Management
+
+![Client project](https://img.shields.io/badge/Project-Client-0969DA?style=flat-square) ![In development](https://img.shields.io/badge/Status-In%20Development-D29922?style=flat-square) ![Private source](https://img.shields.io/badge/Source-Private-6E7681?style=flat-square)
+
+A property showcase and management platform for a **real-estate business in Costa Rica**. Designed to help visitors find properties, explore photos and locations, and contact the business directly.
+
+**What I've built:** Responsive property catalog with search and URL-based filters, detailed property pages with image galleries and maps, WhatsApp inquiry flows, and a typed API contract. Responsible for architecture, UI/UX, frontend, API design and test automation.
+
+**Engineering highlights:** Single Cloudflare Worker architecture; Hono + Zod/OpenAPI contracts; public/private data boundaries; Vitest and Playwright coverage; GitHub Actions CI with dependency and secret scanning.
+
+**Stack:** React · Vite · TypeScript · Tailwind CSS · Hono · Cloudflare Workers · OpenAPI · Vitest · Playwright
+
+**Infrastructure integration in progress:** Cloudflare D1 (SQLite) · Drizzle ORM · R2 · Access · Private admin dashboard
+
+---
+
+#### 03 — [MH Datapedia](https://github.com/j0sMedina/mh-datapedia) · Full-Stack Monorepo
+
+![Public source](https://img.shields.io/badge/Source-Public-2EA44F?style=flat-square) ![Web and mobile](https://img.shields.io/badge/Platforms-Web%20%2B%20Mobile-8250DF?style=flat-square)
+
+A Monster Hunter encyclopedia and database project built to explore full-stack engineering across a shared web, mobile and API ecosystem.
+
+**What I built:** Full-stack monorepo with React web and Expo mobile clients, a Node.js/Express API and PostgreSQL persistence using Prisma. Also performed an API security review and hardening work.
+
+**Engineering highlights:** Shared packages and tooling, typed application boundaries, API design, and full-stack development workflows.
+
+**Stack:** React · React Native (Expo) · TypeScript · Node.js · Express · PostgreSQL · Prisma · TanStack Query · Turborepo
+
+**[Explore the source code](https://github.com/j0sMedina/mh-datapedia)** · **[Read the security audit](https://github.com/j0sMedina/j0sMedina/blob/main/SECURITY.md)**
+
+---
+
+#### 04 — [RentaTodo](https://github.com/Wa39/rentatodo) · Peer-to-Peer Rental Marketplace
+
+![Team project](https://img.shields.io/badge/Project-Team-0969DA?style=flat-square) ![Dashboard](https://img.shields.io/badge/Focus-Owner%20Dashboard-8250DF?style=flat-square)
+
+A peer-to-peer rental platform where owners can list items and renters can discover and book them, built as a four-person project.
+
+**My contribution:** Owned the frontend of the **item-owner dashboard**, contributing to a larger system with a backend API and a separate mobile experience.
+
+**Engineering context:** OpenAPI-based contracts, Docker-based development infrastructure and end-to-end tests across the project.
+
+**Stack:** React · TypeScript · Node.js · PostgreSQL · Docker
+
+**[Explore the repository](https://github.com/Wa39/rentatodo)**
+
+---
+
 ### Stack
 
 **Languages**
@@ -86,35 +152,6 @@ Building things people can actually use — from [Puentes Fiscales](https://puen
   <img src="https://img.shields.io/badge/-Dependency%20Auditing-D97706?style=flat-square&logo=npm&logoColor=white" alt="Dependency Auditing" />
   <img src="https://img.shields.io/badge/-OpenAPI%20Validation-6BA539?style=flat-square&logo=openapiinitiative&logoColor=white" alt="OpenAPI Validation" />
 </p>
-
-
----
-
-### Featured Projects
-
-**Real Estate Platform** *(Private client project · In development)* — Real-estate property showcase for a local business in Costa Rica. Responsive property catalog with search, price and location filters, individual property pages, photo galleries, maps and WhatsApp contact links. A private management dashboard and persistent storage are planned.<br>
-**Role:** Solo full-stack developer — architecture, UI/UX, frontend, API contracts and automated testing.<br>
-**Stack:** React · Vite · TypeScript · Tailwind CSS · Hono · Cloudflare Workers · Zod / OpenAPI · Vitest · Playwright<br>
-**Database & infrastructure:** Cloudflare D1 (SQLite) · Drizzle ORM · Cloudflare R2 · Cloudflare Access *(implementation in progress)*
-
-**[Puentes Fiscales (NAF)](https://puentesfiscales.vercel.app)** *(Private repository)* — Appointment booking system (in-person or virtual) for NAF Puentes Fiscales, the *Núcleo de Asistencia Fiscal* (tax assistance center) at Universidad Nacional (UNA), Sarapiquí campus. Built for real users and designed to be maintained by future students.<br>
-**Role:** Solo developer, built end to end with the NAF team and faculty supervisor (design, frontend, backend, deployment).<br>
-**Stack:** Next.js · React · TypeScript · PostgreSQL · Google APIs (Calendar / Meet / Gmail) · Vercel
-
-**[RentaTodo](https://github.com/Wa39/rentatodo)** — Peer-to-peer item rental platform built with a four-person team.<br>
-**Role:** Owner of the owner-facing dashboard (frontend).<br>
-**Stack:** React · Node.js · PostgreSQL · Docker
-
-**[mh-datapedia](https://github.com/j0sMedina/mh-datapedia)** — A Monster Hunter wiki/database web app, my first real monorepo project for learning full-stack development end to end.<br>
-**Role:** Fullstack developer, built end to end. Also audited and hardened the API's security with help from Claude Code.<br>
-**Stack:** TypeScript · React · React Native (Expo) · Node.js · Express · PostgreSQL · Prisma · TanStack Query · Tailwind CSS · Turborepo<br>
-🔒 [Read the full security audit — SECURITY.md](https://github.com/j0sMedina/j0sMedina/blob/main/SECURITY.md)
-
-<!-- Cuando tengas más proyectos, agregalos acá con el mismo formato:
-**[Nombre del proyecto](link)** — descripción corta.
-Role: tu rol.
-Stack: tecnologías usadas.
--->
 
 ---
 
